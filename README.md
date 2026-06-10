@@ -1,1 +1,0 @@
-# qa-roadmap-full
