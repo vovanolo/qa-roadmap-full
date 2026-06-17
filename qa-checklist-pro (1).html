@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA Roadmap PRO — чеклист із завданнями та нагородами</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2F5F4; --card:#FFFFFF; --ink:#15231F; --muted:#5C6F69;
+    --line:#D8E0DD; --pass:#0E7A52; --pass-soft:#E2F2EA;
+    --block:#C2453A; --block-soft:#F9E8E6;
+    --major:#B97A18; --major-soft:#FBF0DC;
+    --minor:#46627A; --minor-soft:#E7EEF4;
+    --gold:#C9A227; --gold-soft:#FBF4DC;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --sans:'Space Grotesk', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5}
+  a{color:var(--pass);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .statusbar{position:sticky;top:0;z-index:50;background:var(--ink);color:#E8F0ED;
+    font-family:var(--mono);font-size:13px;padding:10px 20px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .statusbar .run{color:#7FD4AE;font-weight:600;white-space:nowrap}
+  .statusbar .run::after{content:'▍';animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .meter{flex:1;min-width:120px;height:8px;background:#2B3B36;border-radius:99px;overflow:hidden}
+  .meter>i{display:block;height:100%;width:0%;background:#3CC68A;border-radius:99px;transition:width .35s ease}
+  .statusbar .nums{white-space:nowrap}
+  .rank{white-space:nowrap;color:#F2D06B;font-weight:600}
+
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px 90px}
+  header.hero{padding:48px 0 28px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--pass);font-weight:600}
+  h1{font-size:clamp(30px,5.5vw,46px);font-weight:700;letter-spacing:-.02em;line-height:1.08;margin:10px 0 14px}
+  .hero p{max-width:66ch;color:var(--muted)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .tag{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:4px;white-space:nowrap}
+  .tag.block{background:var(--block-soft);color:var(--block)}
+  .tag.major{background:var(--major-soft);color:var(--major)}
+  .tag.minor{background:var(--minor-soft);color:var(--minor)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0}
+  .controls button{font-family:var(--mono);font-size:13px;font-weight:500;background:var(--card);
+    border:1px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer}
+  .controls button:hover{border-color:var(--pass);color:var(--pass)}
+  .controls button:focus-visible{outline:2px solid var(--pass);outline-offset:2px}
+  .controls button.active{background:var(--pass);border-color:var(--pass);color:#fff}
+
+  /* ── нагороди ── */
+  .trophy-room{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .trophy-room h2{font-size:15px;letter-spacing:.02em;display:flex;align-items:baseline;gap:10px}
+  .trophy-room h2 .tcnt{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400}
+  .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+  .badge{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center;
+    filter:grayscale(1);opacity:.5;transition:filter .4s,opacity .4s,border-color .4s,background .4s}
+  .badge .bi{font-size:22px;flex:none}
+  .badge .bn{font-size:12.5px;font-weight:600;line-height:1.25}
+  .badge .bd{font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .badge.unlocked{filter:none;opacity:1;border:1px solid var(--gold);background:var(--gold-soft)}
+  .milestones{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+  .ms{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:99px;border:1px dashed var(--line);
+    color:var(--muted);filter:grayscale(1);opacity:.55;transition:all .4s}
+  .ms.unlocked{filter:none;opacity:1;border:1px solid var(--gold);background:var(--gold-soft);color:var(--ink);font-weight:600}
+
+  /* ── toast ── */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:99;
+    background:var(--ink);color:#fff;font-family:var(--mono);font-size:13.5px;
+    padding:12px 20px;border-radius:12px;border:1px solid var(--gold);
+    opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast b{color:#F2D06B}
+
+  /* ── розділи ── */
+  details.sec{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-top:18px;overflow:hidden}
+  details.sec[open]{box-shadow:0 2px 10px rgba(21,35,31,.05)}
+  details.sec.completed{border-color:var(--gold)}
+  summary.sec-sum{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px}
+  summary::-webkit-details-marker{display:none}
+  summary:focus-visible{outline:2px solid var(--pass);outline-offset:-2px;border-radius:10px}
+  .sec-id{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:30px}
+  .sec-title{font-weight:700;font-size:17px;flex:1;letter-spacing:-.01em}
+  .sec-title small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:2px}
+  .sec-title .tag{margin-left:8px;vertical-align:2px}
+  .sec-award{font-size:18px;filter:grayscale(1);opacity:.45}
+  details.sec.completed .sec-award{filter:none;opacity:1}
+  .sec-count{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+  .sec-count.done{color:var(--pass);font-weight:600}
+  .chev{color:var(--muted);transition:transform .2s;flex:none}
+  details[open]>summary .chev{transform:rotate(90deg)}
+  .sec-meter{height:3px;background:var(--paper)}
+  .sec-meter>i{display:block;height:100%;width:0%;background:var(--pass);transition:width .3s}
+
+  .sec-body{padding:4px 20px 20px}
+  .topic{margin-top:16px}
+  .topic-h{display:flex;align-items:baseline;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line)}
+  .topic-h h3{font-size:14.5px;font-weight:700;letter-spacing:.01em}
+  .topic-h .tcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
+  .topic-h .tcount.done{color:var(--pass);font-weight:600}
+  ul.items{list-style:none;padding:2px 0 0}
+  li.item{border-bottom:1px dashed var(--line)}
+  li.item:last-child{border-bottom:none}
+  li.item.hidden{display:none}
+  li.item>label{display:flex;gap:11px;align-items:flex-start;padding:8px 2px 2px;cursor:pointer}
+  li.item>label:hover .txt{color:var(--pass)}
+  .item input{position:absolute;opacity:0;width:0;height:0}
+  .box{flex:none;width:19px;height:19px;margin-top:2px;border:2px solid var(--line);border-radius:5px;
+    display:grid;place-items:center;font-size:12px;color:#fff;background:var(--card);
+    transition:background .15s,border-color .15s}
+  .item input:focus-visible + .box{outline:2px solid var(--pass);outline-offset:2px}
+  .item input:checked + .box{background:var(--pass);border-color:var(--pass)}
+  .item input:checked + .box::after{content:'✓';font-weight:700}
+  .txt{font-size:14.5px}
+  .item input:checked ~ .txt{color:var(--muted)}
+
+  details.more{margin:0 0 8px 30px}
+  details.more>summary{font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;
+    padding:2px 0;width:fit-content}
+  details.more>summary:hover{color:var(--pass)}
+  details.more[open]>summary{color:var(--pass)}
+  .more-body{background:var(--paper);border-radius:8px;padding:10px 12px;margin-top:6px;font-size:13.5px}
+  .more-body .task{display:flex;gap:8px}
+  .more-body .task::before{content:'⚙';flex:none}
+  .more-body ol.tasklist{margin:6px 0 0 0;padding-left:34px}
+  .more-body ol.tasklist li{margin:3px 0;padding-left:2px}
+  .more-body ol.tasklist li::marker{color:var(--pass);font-family:var(--mono);font-weight:600}
+  .more-body .src{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:var(--muted)}
+  .more-body .src::before{content:'📚';flex:none}
+  .more-body .src a{white-space:nowrap}
+
+  footer{margin-top:50px;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="statusbar" role="status">
+  <span class="run">RUN: QA-ROADMAP-PRO</span>
+  <div class="meter"><i id="totalBar"></i></div>
+  <span class="nums">PASSED <b id="doneN">0</b>/<span id="totalN">0</span> · <span id="pct">0%</span></span>
+  <span class="rank" id="rank">RANK: TRAINEE</span>
+</div>
+
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">Roadmap · Manual → Automation · завдання + джерела + нагороди</div>
+  <h1>Чеклист вивчення QA</h1>
+  <p>Кожен пункт має по 2 практичні завдання для самоперевірки і кілька джерел для вивчення (документація, відео-курси, тренажери, україномовні спільноти) — розгорни «практика · джерела» під пунктом. Закривай розділи повністю, щоб відкривати бейджі, і слідкуй за рангом угорі.</p>
+  <div class="legend">
+    <span class="tag block">Blocker — без цього нікуди</span>
+    <span class="tag major">Major — питають на співбесідах</span>
+    <span class="tag minor">Minor — перевага, не вимога</span>
+  </div>
+  <div class="controls">
+    <button id="toggleDone" type="button">Сховати виконане</button>
+    <button id="openAll" type="button">Розгорнути все</button>
+    <button id="closeAll" type="button">Згорнути все</button>
+    <button id="reset" type="button">Скинути прогрес</button>
+  </div>
+  <div class="trophy-room">
+    <h2>🏆 Кімната нагород <span class="tcnt" id="achCnt">0/13 бейджів</span></h2>
+    <div class="badges" id="badges"></div>
+    <div class="milestones" id="milestones"></div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer>// прогрес зберігається у localStorage браузера і відновлюється при відкритті файлу<br>// зміна браузера/пристрою або очищення даних сайтів скидає прогрес · усього тем: <span id="footTotal"></span></footer>
+</div>
+
+<div id="toast" role="alert"></div>
+
+<script>
+/* ── довідник джерел: ключ → [назва, url] ── */
+const SRC = {
+ istqb:["ISTQB Syllabus","https://istqb.org"],
+ glos:["ISTQB Glossary","https://glossary.istqb.org"],
+ g99:["Guru99 Testing","https://www.guru99.com/software-testing.html"],
+ sth:["SoftwareTestingHelp","https://www.softwaretestinghelp.com"],
+ mot:["Ministry of Testing","https://www.ministryoftesting.com"],
+ mdn:["MDN Web Docs","https://developer.mozilla.org"],
+ mdnhttp:["MDN: HTTP","https://developer.mozilla.org/docs/Web/HTTP"],
+ w3s:["W3Schools","https://www.w3schools.com"],
+ devt:["Chrome DevTools Docs","https://developer.chrome.com/docs/devtools"],
+ restapi:["restfulapi.net","https://restfulapi.net"],
+ postman:["Postman Learning Center","https://learning.postman.com"],
+ swag:["Swagger Docs","https://swagger.io/docs"],
+ gql:["graphql.org","https://graphql.org/learn"],
+ jsonorg:["json.org","https://www.json.org"],
+ jwt:["jwt.io","https://jwt.io/introduction"],
+ sqlbolt:["SQLBolt","https://sqlbolt.com"],
+ sqlex:["sql-ex","https://sql-ex.ru"],
+ mode:["Mode SQL Tutorial","https://mode.com/sql-tutorial"],
+ pg:["PostgreSQL Tutorial","https://www.postgresqltutorial.com"],
+ mongo:["MongoDB Docs","https://www.mongodb.com/docs"],
+ agile:["Atlassian Agile Coach","https://www.atlassian.com/agile"],
+ scrum:["Scrum Guide","https://scrumguides.org"],
+ jira:["Jira Docs","https://support.atlassian.com/jira-software-cloud"],
+ conf:["Confluence Docs","https://support.atlassian.com/confluence-cloud"],
+ tr:["TestRail Docs","https://support.testrail.com"],
+ charles:["Charles Proxy Docs","https://www.charlesproxy.com/documentation"],
+ proxyman:["Proxyman Docs","https://docs.proxyman.com"],
+ figma:["Figma Help","https://help.figma.com"],
+ bstack:["BrowserStack","https://www.browserstack.com"],
+ and:["Android Developers","https://developer.android.com"],
+ adbd:["ADB Docs","https://developer.android.com/tools/adb"],
+ hig:["Apple HIG","https://developer.apple.com/design/human-interface-guidelines"],
+ matd:["Material Design","https://m3.material.io"],
+ tflight:["TestFlight","https://developer.apple.com/testflight"],
+ fire:["Firebase Docs","https://firebase.google.com/docs"],
+ owasp:["OWASP","https://owasp.org"],
+ juice:["OWASP Juice Shop","https://owasp.org/www-project-juice-shop"],
+ wcag:["W3C WAI","https://www.w3.org/WAI"],
+ nng:["Nielsen Norman Group","https://www.nngroup.com/articles"],
+ jm:["JMeter Docs","https://jmeter.apache.org/usermanual"],
+ k6:["k6 Docs","https://grafana.com/docs/k6"],
+ lh:["Lighthouse","https://developer.chrome.com/docs/lighthouse"],
+ linux:["Linux Journey","https://linuxjourney.com"],
+ git:["Pro Git Book","https://git-scm.com/book"],
+ gh:["GitHub Docs","https://docs.github.com"],
+ gha:["GitHub Actions","https://docs.github.com/actions"],
+ docker:["Docker Get Started","https://docs.docker.com/get-started"],
+ pw:["Playwright Docs","https://playwright.dev"],
+ sel:["Selenium Docs","https://www.selenium.dev/documentation"],
+ cy:["Cypress Docs","https://docs.cypress.io"],
+ pytest:["pytest Docs","https://docs.pytest.org"],
+ py:["Python Tutorial","https://docs.python.org/3/tutorial"],
+ cw:["Codewars","https://www.codewars.com"],
+ lc:["LeetCode","https://leetcode.com"],
+ tau:["Test Automation University","https://testautomationu.applitools.com"],
+ allure:["Allure Report","https://allurereport.org/docs"],
+ reqlib:["requests Docs","https://requests.readthedocs.io"],
+ csssel:["MDN: CSS Selectors","https://developer.mozilla.org/docs/Web/CSS/CSS_selectors"],
+ xpath:["MDN: XPath","https://developer.mozilla.org/docs/Web/XPath"],
+ pict:["PICT","https://github.com/microsoft/pict"],
+ dou:["DOU: QA","https://dou.ua/forums/tags/QA"],
+ djinni:["Djinni","https://djinni.co"],
+ li:["LinkedIn","https://www.linkedin.com"],
+ ut:["uTest Academy","https://www.utest.com"],
+ ti:["the-internet","https://the-internet.herokuapp.com"],
+ sauce:["saucedemo","https://www.saucedemo.com"],
+ dq:["demoqa","https://demoqa.com"],
+ rb:["restful-booker","https://restful-booker.herokuapp.com/apidoc"],
+ rr:["reqres.in","https://reqres.in"],
+ yt:["YouTube: пошук теми","https://www.youtube.com"],
+ eng:["BBC Learning English","https://www.bbc.co.uk/learningenglish"],
+ fcc:["freeCodeCamp (YouTube)","https://www.youtube.com/c/Freecodecamp"],
+ edy:["Edureka QA","https://www.youtube.com/c/edurekaIN"],
+ swtm:["Atlassian: Agile/QA відео","https://www.youtube.com/c/atlassian"],
+ execm:["ExecuteAutomation (YouTube)","https://www.youtube.com/c/ExecuteAutomation"],
+ raghav:["Naveen AutomationLabs (YouTube)","https://www.youtube.com/c/NaveenAutomationLabs"],
+ swr:["SoftwareTestingMentor (YouTube)","https://www.youtube.com/@SoftwareTestingMentor"],
+ qabible:["QA: TAU відеокурси","https://testautomationu.applitools.com/courses"],
+ courseraqa:["Coursera: Software Testing","https://www.coursera.org/courses?query=software%20testing"],
+ udemyqa:["Udemy: QA-курси","https://www.udemy.com/topic/software-testing"],
+ stepik:["Stepik: тестування ПЗ","https://stepik.org/catalog?q=тестування"],
+ qaua:["QA Club Lviv / Kyiv","https://qaclub.com.ua"],
+ prom:["Prometheus: курси","https://prometheus.org.ua"],
+ dou_qa:["DOU: статті про QA","https://dou.ua/lenta/tags/QA"],
+ habr:["Habr: тестування","https://habr.com/ru/hubs/it_testing"],
+ qarocks:["QA Rocks (Telegram-спільнота)","https://t.me/qarocks"],
+ telqa:["Telegram: QA-спільноти","https://t.me/s/qa_chat"],
+ uaqa:["UA QA ресурси (огляд)","https://dou.ua/forums/tags/QA"],
+ playw_api:["Playwright: API testing","https://playwright.dev/docs/api-testing"],
+ cypress_best:["Cypress: Best Practices","https://docs.cypress.io/guides/references/best-practices"],
+ seleniumhq:["Selenium: Getting Started","https://www.selenium.dev/documentation/webdriver/getting_started"],
+ pgexercises:["PGExercises","https://pgexercises.com"],
+ w3schools_sql:["W3Schools: SQL","https://www.w3schools.com/sql"],
+ hackerrank_sql:["HackerRank: SQL","https://www.hackerrank.com/domains/sql"],
+ regex101:["regex101","https://regex101.com"],
+ regexlearn:["RegexLearn","https://regexlearn.com"],
+ httpcats:["HTTP Cats (коди статусів)","https://http.cat"],
+ httpstatuses:["HTTPStatuses.io","https://httpstatuses.io"],
+ publicapis:["Public APIs (каталог)","https://github.com/public-apis/public-apis"],
+ httpbin:["httpbin.org","https://httpbin.org"],
+ jsonplaceholder:["JSONPlaceholder","https://jsonplaceholder.typicode.com"],
+ katas:["Exercism","https://exercism.org"],
+ automationexercise:["Automation Exercise","https://automationexercise.com"],
+ gtmetrix:["GTmetrix","https://gtmetrix.com"],
+ webpagetest:["WebPageTest","https://www.webpagetest.org"],
+ wave:["WAVE a11y tool","https://wave.webaim.org"],
+ axe:["axe DevTools","https://www.deque.com/axe/devtools"],
+ contrast:["WebAIM Contrast Checker","https://webaim.org/resources/contrastchecker"],
+ portswigger:["PortSwigger Web Security Academy","https://portswigger.net/web-security"],
+ tryhackme:["TryHackMe","https://tryhackme.com"],
+ git_branching:["Learn Git Branching","https://learngitbranching.js.org"],
+ githowto:["githowto","https://githowto.com"],
+ dockercurriculum:["Docker Curriculum","https://docker-curriculum.com"],
+ katacoda:["killercoda (Docker/Linux)","https://killercoda.com"],
+ overapi:["OverAPI (шпаргалки)","https://overapi.com"],
+ devdocs:["DevDocs","https://devdocs.io"],
+ mdn_learn:["MDN: Learn Web Dev","https://developer.mozilla.org/docs/Learn"],
+ swagger_petstore:["Swagger Petstore (demo)","https://petstore.swagger.io"],
+ ground_truth:["Ministry of Testing: Dojo","https://www.ministryoftesting.com/dojo"],
+ club_mot:["MoT Club (форум)","https://club.ministryoftesting.com"],
+ satr:["SoftwareTestingHelp: career","https://www.softwaretestinghelp.com/how-to-become-a-software-tester"],
+ interviewbit:["InterviewBit","https://www.interviewbit.com/software-testing-interview-questions"],
+ geeks_qa:["GeeksforGeeks: SW Testing","https://www.geeksforgeeks.org/software-testing-tutorial"],
+};
+
+/* ── бейджі за розділи ── */
+const ACH = {
+ "01":["🧠","Теоретик","основи теорії"],
+ "02":["🌀","Agile-навігатор","процеси"],
+ "03":["📐","Архітектор перевірок","тест-дизайн"],
+ "04":["🐞","Мисливець на баги","документація"],
+ "05":["🌐","Веб-анатом","веб і DevTools"],
+ "06":["🔌","Повелитель API","API-тестування"],
+ "07":["🗄️","SQL-детектив","бази даних"],
+ "08":["📱","Мобільний розвідник","mobile"],
+ "09":["🧰","Майстер інструментів","tooling"],
+ "10":["🛡️","Вартовий якості","нефункціональне"],
+ "11":["🐧","Термінальний ніндзя","CLI/Git/Docker"],
+ "12":["🤖","Автоматизатор","автоматизація"],
+ "13":["🚀","Готовий до оферу","працевлаштування"]
+};
+const MILESTONES = [[10,"🥉 Перший крок — 10%"],[25,"🔥 Розігнався — 25%"],[50,"⚖️ Екватор — 50%"],[75,"🏁 Фінішна пряма — 75%"],[100,"🏆 QA READY — 100%"]];
+function rankOf(p){return p>=100?"STRONG JUNIOR":p>=75?"JUNIOR":p>=50?"JUNIOR−":p>=25?"INTERN":p>=10?"TRAINEE+":"TRAINEE";}
+
+/* ── дані: item = [текст, "ключі джерел", [завдання1, завдання2, ...]] ── */
+const DATA = [
+{id:"01", tag:"block", title:"Основи теорії тестування", sub:"Фундамент: терміни, принципи, класифікації", topics:[
+ {t:"Базові поняття", i:[
+  ["Що таке тестування ПЗ: визначення, цілі, місце в розробці","istqb g99 geeks_qa",["Поясни уявному другові за 2 хвилини, навіщо тестування і які його цілі","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Якість ПЗ: характеристики якості (ISO 25010 оглядово)","istqb sth geeks_qa",["Випиши 5 характеристик якості ISO 25010 і дай приклад кожної для відомого застосунку","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["QA vs QC vs Testing: різниця і як пояснити своїми словами","g99 glos geeks_qa",["Намалюй схему вкладеності QA ⊃ QC ⊃ Testing і додай по 2 активності в кожен рівень","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Чому неможливо протестувати все (вичерпне тестування)","istqb geeks_qa fcc",["Порахуй кількість комбінацій для форми з 3 полів по 10 значень кожне — і зроби висновок","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Error → Defect (Bug) → Failure: ланцюжок і приклади","glos g99 geeks_qa",["Опиши власний приклад ланцюжка: помилка людини → дефект у коді → збій у роботі","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Root cause (першопричина) дефекту vs симптом","istqb mot geeks_qa",["Згадай реальний баг (свій чи відомий) і відділи симптом від першопричини","Намалюй схему або mind map цього поняття на папері."]],
+  ["Тестування показує наявність дефектів, а не їх відсутність","istqb geeks_qa fcc",["Поясни, чому фраза «багів не знайдено» не дорівнює «багів немає»","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Вартість дефекту залежно від етапу виявлення","g99 sth geeks_qa",["Накидай графік росту вартості бага від етапу вимог до продакшена","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+ ]},
+ {t:"7 принципів тестування (ISTQB)", i:[
+  ["1. Тестування демонструє наявність дефектів","istqb glos geeks_qa",["Наведи приклад, коли тести пройшли, а баг усе одно «втік» на прод","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["2. Вичерпне тестування неможливе","istqb geeks_qa fcc",["Поясни на прикладі форми реєстрації, чому перевірити всі комбінації нереально","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["3. Раннє тестування економить час і гроші","istqb geeks_qa fcc",["Назви 3 артефакти, які QA може перевірити ще до написання коду","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["4. Скупчення дефектів (defect clustering, принцип Парето)","istqb g99 glos geeks_qa",["Поясни принцип Парето 80/20 у контексті розподілу багів по модулях","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["5. Парадокс пестицидів — тести треба оновлювати","istqb geeks_qa fcc",["Опиши, що станеться з регрес-набором, який не оновлювали рік","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["6. Тестування залежить від контексту","istqb geeks_qa fcc",["Порівняй підхід до тестування банкінгу та промо-лендингу","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["7. Відсутність помилок — хибна логіка (absence-of-errors fallacy)","istqb geeks_qa fcc",["Вигадай приклад продукту без багів, який нікому не потрібен","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+ ]},
+ {t:"Верифікація та валідація", i:[
+  ["Верифікація: «чи правильно ми робимо продукт?»","g99 glos istqb geeks_qa",["Наведи 3 запитання-перевірки, що належать до верифікації","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Валідація: «чи правильний продукт ми робимо?»","g99 glos istqb geeks_qa",["Сформулюй питання валідації для фічі «темна тема»","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Приклади активностей для кожної","sth geeks_qa fcc",["Розклади активності типового спринта на «верифікація» і «валідація»","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+ ]},
+ {t:"Рівні тестування", i:[
+  ["Компонентне (unit) тестування: хто і як виконує","istqb g99 geeks_qa",["Знайди приклад unit-тесту на GitHub і поясни, що саме він перевіряє","Намалюй схему або mind map цього поняття на папері."]],
+  ["Інтеграційне тестування: що перевіряє","istqb g99 geeks_qa",["Наведи приклад інтеграційного бага між фронтом і беком","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Підходи до інтеграції: big bang, top-down, bottom-up, сендвіч","sth geeks_qa fcc",["Поясни big bang vs покрокову інтеграцію: плюси і мінуси у 2 реченнях кожен","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Системне тестування","istqb geeks_qa fcc",["Опиши, чим системний тест логіну відрізняється від unit-тесту валідації пароля","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Приймальне тестування (acceptance): мета","istqb geeks_qa fcc",["Поясни, хто і за якими критеріями «приймає» продукт","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["UAT — user acceptance testing","g99 geeks_qa fcc",["Сформулюй 3 сценарії UAT для інтернет-магазину","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Alpha- та beta-тестування: де проходить, хто учасники","g99 sth geeks_qa",["Згадай beta-програму відомого продукту (Telegram, iOS) і що вона дає компанії","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Контрактне та регуляторне приймальне тестування (оглядово)","istqb geeks_qa fcc",["Наведи приклад продукту, де потрібне регуляторне приймання (медицина, фінанси)","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+ ]},
+ {t:"Типи і підходи", i:[
+  ["Функціональне тестування: що робить система","istqb g99 katas fcc",["Випиши 5 функціональних перевірок для кошика інтернет-магазину","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Нефункціональне: як система працює (перфоманс, юзабіліті...)","istqb katas fcc py",["Випиши 5 нефункціональних перевірок для того ж кошика","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Тестування, повʼязане зі змінами: регресійне + підтверджувальне","istqb glos geeks_qa",["Поясни різницю регресійного і підтверджувального тестування на прикладі одного бага","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Статичне тестування: рев'ю, walkthrough, інспекції, статичний аналіз","istqb geeks_qa fcc",["Проведи статичне рев'ю будь-якої вимоги або ТЗ і знайди 3 проблеми","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Динамічне тестування","istqb geeks_qa fcc",["Наведи приклад, коли динаміка знаходить те, що пропустила статика","Намалюй схему або mind map цього поняття на папері."]],
+  ["White box: тестування на основі структури коду","g99 httpcats httpstatuses httpbin",["Поясни, які знання потрібні тестувальнику для white box","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Black box: на основі специфікації","g99 geeks_qa fcc",["Опиши, чому black box тестувальник може знайти баг, який «не бачить» розробник","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Grey box: комбінований підхід","g99 geeks_qa fcc",["Наведи приклад grey box: тестуєш через UI, підглядаючи у БД","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Ручне vs автоматизоване: переваги й обмеження кожного","mot tau raghav execm",["Склади список: 3 задачі для ручного тестування і 3 — для автоматизації","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+ ]},
+ {t:"Види тестування — термінологія", i:[
+  ["Smoke testing: «чи живий білд», коли запускається","g99 glos geeks_qa",["Склади смоук-чекліст із 7 пунктів для відомого сайту","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Sanity testing і відмінність від smoke (класика співбесід)","g99 sth interviewbit qaua",["Поясни різницю smoke і sanity так, щоб зрозумів не-айтішник","Пройди ще одне mock-інтервʼю або відповіси на 10 питань з InterviewBit."]],
+  ["Regression testing: навіщо і як формується регрес-набір","istqb geeks_qa fcc",["Виріши, які кейси включити в регрес після зміни логіки знижок","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Re-testing (confirmation): перевірка виправленого бага","glos geeks_qa fcc",["Опиши порядок дій після того, як розробник повернув баг зі статусом fixed","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Позитивне та негативне тестування","g99 geeks_qa fcc",["Напиши по 5 позитивних і негативних перевірок поля «телефон»","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Exploratory testing: сесії, чартери, тури","mot geeks_qa fcc",["Проведи 30-хвилинну дослідницьку сесію сайту за чартером і запиши знахідки","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Ad-hoc testing і чим відрізняється від exploratory","g99 geeks_qa fcc",["Потестуй 15 хвилин будь-який застосунок без плану — порівняй із сесією за чартером","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Monkey testing","g99 geeks_qa fcc",["Поклацай хаотично формою 5 хвилин — щось зламалося?","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["End-to-end (E2E) тестування","sth geeks_qa fcc",["Опиши e2e-сценарій «від пошуку товару до листа про замовлення»","Намалюй схему або mind map цього поняття на папері."]],
+  ["Тестування інсталяції/розгортання (оглядово)","sth geeks_qa fcc",["Перевір встановлення і видалення будь-якої програми, зафіксуй кроки","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["A/B тестування (оглядово, що це для продукту)","nng geeks_qa fcc",["Поясни, як A/B тест допоміг би вибрати колір кнопки «Купити»","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+ ]},
+ {t:"Ключові концепції", i:[
+  ["Піраміда тестування: unit / API / UI — пропорції та чому","mot tau publicapis httpbin",["Намалюй піраміду і підпиши приблизні пропорції тестів кожного рівня","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["«Перевернута піраміда» (ice cream cone) як антипатерн","mot istqb glos geeks_qa",["Поясни, чому «морозиво» (все через UI) — дорого і повільно","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Shift-left: раннє залучення QA, тестування вимог","sth istqb glos geeks_qa",["Назви 3 активності QA на етапі вимог","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Shift-right: моніторинг, тестування на проді (оглядово)","mot geeks_qa fcc",["Наведи приклад перевірки на проді: моніторинг, canary-реліз","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Тестове покриття (coverage): покриття вимог vs коду","glos httpcats httpstatuses httpbin",["Порахуй покриття: 20 вимог, 14 покриті тестами — скільки відсотків?","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Пріоритезація: risk-based testing (оглядово)","istqb geeks_qa fcc",["Розстав пріоритети тестування трьох фіч: оплата, аватар, пошук — і обґрунтуй","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Незалежність тестування: хто тестує і чому це важливо","istqb geeks_qa fcc",["Поясни, чому розробник — не найкращий тестувальник власного коду","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Прочитати ISTQB Foundation syllabus + глосарій термінів","istqb glos geeks_qa",["Пройди 1 розділ силабуса і випиши 10 нових термінів із поясненнями","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+ ]},
+]},
+{id:"02", tag:"block", title:"SDLC, STLC та Agile", sub:"Процеси розробки і місце QA в них", topics:[
+ {t:"SDLC — життєвий цикл розробки", i:[
+  ["Етапи SDLC: збір вимог → аналіз → дизайн → розробка → тестування → деплой → підтримка","g99 agile swtm",["Намалюй схему етапів SDLC і познач, де зʼявляється QA","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Ролі в команді: PO/PM, BA, дизайнер, розробники, QA, DevOps","agile dou swtm",["Опиши одним реченням зону відповідальності кожної ролі","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Хто такі stakeholders","agile swtm geeks_qa",["Назви stakeholder-ів для застосунку доставки їжі","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+ ]},
+ {t:"Моделі розробки", i:[
+  ["Waterfall: етапи, плюси, мінуси, де досі застосовується","g99 sth swtm",["Назви 2 типи проєктів, де waterfall досі доречний, і поясни чому","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["V-model: звʼязок етапів розробки з рівнями тестування","g99 swtm geeks_qa",["Намалюй V-модель і зʼєднай етапи розробки з рівнями тестування","Намалюй схему або mind map цього поняття на папері."]],
+  ["Ітеративна модель","sth swtm geeks_qa",["Поясни різницю ітерації та інкременту на прикладі будування дому","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Інкрементна модель і різниця з ітеративною","sth swtm geeks_qa",["Наведи приклад продукту, що ріс інкрементами: MVP → повна версія","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Спіральна модель: прототипи та оцінка ризиків","g99 swtm geeks_qa",["Поясни, де у спіральній моделі живе оцінка ризиків","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Agile як філософія: цінності маніфесту Agile","agile scrum swtm",["Перекажи 4 цінності Agile-маніфесту своїми словами","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["12 принципів Agile (оглядово)","agile scrum swtm istqb",["Обери 3 принципи Agile і поясни, як вони стосуються роботи QA","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+ ]},
+ {t:"STLC — життєвий цикл тестування", i:[
+  ["Етап 1: аналіз вимог (requirements analysis)","g99 sth swtm",["Склади список із 5 питань до вимоги «додати фільтр за ціною»","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Етап 2: планування тестування (test planning)","g99 swtm geeks_qa",["Визнач для міні-проєкту: що тестуємо, чим, хто і коли","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Етап 3: дизайн тестів і підготовка даних (test design)","g99 swtm geeks_qa",["Створи 5 кейсів і тестові дані для обраної фічі","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Етап 4: налаштування тестового оточення","sth swtm geeks_qa",["Опиши, що має бути готове в оточенні до старту тестування","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Етап 5: виконання тестів (test execution)","g99 swtm geeks_qa",["Проведи прогін своїх кейсів і зафіксуй статуси","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Етап 6: завершення циклу і звітність (test closure)","g99 katas fcc py",["Напиши короткий підсумок циклу: знайдено / виправлено / залишилось","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Entry criteria: коли можна починати тестування","glos swtm geeks_qa",["Сформулюй 3 entry-критерії для початку тестування спринта","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Exit criteria: коли тестування можна завершити","glos swtm geeks_qa",["Сформулюй 3 exit-критерії для релізу","Намалюй схему або mind map цього поняття на папері."]],
+ ]},
+ {t:"Scrum", i:[
+  ["Ролі: Product Owner — за що відповідає","scrum agile swtm",["Назви 3 рішення, які ухвалює саме PO","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Ролі: Scrum Master — за що відповідає","scrum swtm geeks_qa",["Поясни, чим Scrum Master відрізняється від проджект-менеджера","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Ролі: Development Team (включно з QA)","scrum swtm geeks_qa",["Опиши, чому QA — частина dev team, а не окремий відділ","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Спринт: тривалість, ціль спринта","scrum swtm geeks_qa",["Поясни, що таке ціль спринта, і наведи приклад","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Sprint Planning: що відбувається, роль QA","scrum agile swtm",["Сформулюй 2 питання, які QA має поставити на плануванні","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Daily Standup: формат, типові помилки","agile swtm geeks_qa",["Підготуй свій ідеальний daily-апдейт у 3 реченнях","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Sprint Review / Demo","scrum swtm geeks_qa",["Опиши, що і кому демонструє команда на review","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Sprint Retrospective: навіщо і як проходить","agile swtm geeks_qa",["Запиши 2 формати ретро (наприклад, start-stop-continue)","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Backlog Refinement (grooming): участь QA в оцінці","agile scrum swtm",["Оціни 3 вигадані сторі у story points і поясни оцінки","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Артефакти: Product Backlog","scrum swtm geeks_qa",["Поясни, хто і як пріоритезує product backlog","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Артефакти: Sprint Backlog","scrum swtm geeks_qa",["Поясни, звідки береться sprint backlog на плануванні","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Артефакти: Increment","scrum swtm geeks_qa",["Дай визначення інкременту і звʼяжи його з DoD","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Velocity і burndown chart (оглядово)","agile devt mdn_learn",["Порахуй velocity команди за вигаданими даними 3 спринтів","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+ ]},
+ {t:"Kanban та інші підходи", i:[
+  ["Kanban-дошка: колонки, потік задач","agile scrum swtm",["Намалюй kanban-дошку з 5 колонок для процесу тестування","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["WIP limits — обмеження роботи в процесі","agile swtm geeks_qa",["Поясни, що станеться з потоком без WIP-лімітів","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Чим Kanban відрізняється від Scrum, коли що обирають","agile scrum swtm",["Заповни табличку відмінностей Scrum vs Kanban на 5 рядків","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Scrumban (оглядово)","agile scrum swtm",["Поясни, для якої команди підійде Scrumban","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Extreme Programming: парне програмування, TDD (оглядово)","agile swtm geeks_qa",["Перекажи ідею TDD у 2 реченнях","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+ ]},
+ {t:"Вимоги та user stories", i:[
+  ["Типи вимог: бізнес, функціональні, нефункціональні","sth g99 katas fcc",["Розклади 6 вигаданих вимог на бізнес / функціональні / нефункціональні","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Критерії якісної вимоги: повнота, однозначність, несуперечливість, тестованість","sth swtm geeks_qa",["Перевір будь-яку вимогу на 4 критерії та знайди порушення","Намалюй схему або mind map цього поняття на папері."]],
+  ["Тестування вимог: типові проблеми і питання до BA/PO","mot swtm geeks_qa",["Знайди 3 проблеми у вимозі «сторінка має вантажитись швидко»","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["User story: формат «Як <роль>, я хочу <дія>, щоб <цінність>»","agile scrum swtm",["Напиши user story для функції «скасувати замовлення»","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Acceptance criteria: списком і у форматі Given-When-Then","agile swtm geeks_qa",["Додай до своєї сторі 3 AC у форматі Given-When-Then","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["INVEST-критерії якісної сторі","agile swtm geeks_qa",["Перевір свою сторі за INVEST — які букви «кульгають»?","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Epic, story, task, sub-task — ієрархія","jira swtm geeks_qa",["Розбий epic «особистий кабінет» на 5 сторі","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Definition of Ready (DoR)","agile swtm geeks_qa",["Склади DoR із 5 пунктів для своєї команди мрії","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Definition of Done (DoD) і місце тестування в ньому","agile swtm geeks_qa",["Склади DoD, де є мінімум 3 пункти про тестування","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Оцінювання: story points, planning poker, T-shirt sizes (оглядово)","agile scrum swtm",["Оціни 5 задач у T-shirt sizes і поясни одну оцінку","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+ ]},
+ {t:"QA у спринті на практиці", i:[
+  ["Участь у груминзі: питання до вимог, оцінка тестування","mot swtm geeks_qa",["Підготуй 5 питань до сторі перед грумінгом","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Тест-дизайн паралельно з розробкою фічі","mot swtm geeks_qa",["Опиши, що QA робить корисного, поки розробник пише код фічі","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Тестування фіч у спринті + регрес перед релізом","sth scrum swtm",["Сплануй мінімальний регрес перед релізом за 1 день","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Bug triage: пріоритезація багів з командою","sth swtm geeks_qa",["Розстав пріоритети пʼятьом вигаданим багам на triage і обґрунтуй","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Реліз: чек-лист релізу, смоук на проді (оглядово)","mot swtm geeks_qa",["Склади чек-лист релізу з 8 пунктів","Намалюй схему або mind map цього поняття на папері."]],
+ ]},
+]},
+{id:"03", tag:"block", title:"Техніки тест-дизайну", sub:"Як перетворити вимоги на ефективний набір перевірок", topics:[
+ {t:"Еквівалентне розбиття (Equivalence Partitioning)", i:[
+  ["Поняття класу еквівалентності: валідні та невалідні класи","istqb g99 geeks_qa",["Розбий поле «вік 18–60» на валідні та невалідні класи","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Правило: один тест на клас","istqb geeks_qa execm",["Поясни, чому достатньо одного значення з кожного класу","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Виділення класів для числових діапазонів","g99 geeks_qa execm",["Виділи класи для поля «сума переказу 1–100000 грн»","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Виділення класів для рядків, форматів, типів даних","g99 geeks_qa execm",["Виділи класи еквівалентності для формату номера телефону","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Практика: розбити на класи поле «вік», «email», «сума переказу»","dq geeks_qa execm",["Оформи класи для трьох полів у наочну табличку","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+ ]},
+ {t:"Граничні значення (Boundary Value Analysis)", i:[
+  ["Чому помилки скупчуються на межах","istqb g99 geeks_qa",["Поясни на прикладі коду «if x > 100» замість «>=», де ховається баг","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["2-point підхід: межа та сусіднє значення","istqb geeks_qa execm",["Випиши 2-point значення для діапазону 1–99","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["3-point підхід: під межею / межа / над межею","istqb geeks_qa execm",["Випиши 3-point значення для того ж діапазону і порівняй набори","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Межі довжини рядків, розміру файлів, дат","g99 geeks_qa execm",["Визнач граничні значення для поля «коментар до 500 символів»","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Практика: граничні значення для поля «кількість товару 1–99»","dq geeks_qa execm",["Знайди межі у формі реального сайту і протестуй їх","Намалюй схему або mind map цього поняття на папері."]],
+ ]},
+ {t:"Таблиці рішень (Decision Tables)", i:[
+  ["Умови та дії: побудова таблиці","istqb g99 geeks_qa",["Побудуй таблицю умов і дій для безкоштовної доставки (сума, місто, промокод)","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Повна таблиця: 2^n комбінацій","istqb geeks_qa execm",["Порахуй кількість правил для 4 бінарних умов","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Скорочення таблиці (collapse) — обʼєднання правил","sth geeks_qa execm",["Згорни свою таблицю, прибравши неможливі комбінації","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Практика: таблиця рішень для знижок/доставки/логіну","g99 geeks_qa execm",["Побудуй таблицю рішень для логіну: логін / пароль / капча","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+ ]},
+ {t:"Стани і переходи (State Transition)", i:[
+  ["Діаграма станів: стани, переходи, події, дії","istqb g99 geeks_qa",["Намалюй діаграму станів замовлення в інтернет-магазині","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Валідні та невалідні переходи","istqb geeks_qa execm",["Випиши 3 невалідні переходи зі своєї діаграми","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Покриття: 0-switch (усі переходи) і 1-switch (оглядово)","istqb geeks_qa execm",["Склади набір тестів, що покриває всі переходи (0-switch)","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Практика: стани замовлення / документа / банкомату","sth geeks_qa execm",["Зроби діаграму станів для відеоплеєра: play, pause, stop, buffering","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+ ]},
+ {t:"Інші техніки", i:[
+  ["Pairwise (попарне) тестування: ідея покриття пар","g99 pict geeks_qa",["Поясни, чому pairwise різко зменшує кількість тестів без великої втрати якості","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Інструменти pairwise: PICT або онлайн-генератори","pict geeks_qa execm",["Згенеруй комбінації для 4 параметрів фільтра у PICT або онлайн-генераторі","Намалюй схему або mind map цього поняття на папері."]],
+  ["Use case testing: основний і альтернативні потоки","istqb geeks_qa execm",["Опиши основний і 2 альтернативні потоки оформлення замовлення","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Error guessing: типові місця помилок з досвіду","g99 geeks_qa execm",["Склади список із 10 «улюблених» місць багів за своїми спостереженнями","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Чек-лист-орієнтоване тестування","mot geeks_qa execm",["Перетвори свій тест-дизайн однієї фічі на компактний чек-лист","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Exploratory: тур-підхід (тури Віттакера оглядово), сесії та чартери","mot geeks_qa execm",["Проведи 30-хвилинну сесію за чартером «перевірити обробку помилок»","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Класифікаційні дерева (оглядово)","istqb geeks_qa execm",["Побудуй класифікаційне дерево для параметрів пошуку авіаквитків","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Комбінування технік: яку коли застосовувати","istqb geeks_qa execm",["Для 3 різних фіч обери найдоречнішу техніку і обґрунтуй вибір","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+ ]},
+ {t:"Типові обʼєкти і набори перевірок", i:[
+  ["Текстове поле: довжина, спецсимволи, пробіли, юнікод/емодзі, XSS-рядки","sth dq httpcats httpstatuses",["Склади 10 перевірок текстового поля і прожени їх на demoqa","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Email: валідні/невалідні формати, регістр, довжина","sth geeks_qa execm",["Збери добірку з 10 валідних і невалідних email та перевір реальну форму","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Пароль: вимоги складності, маскування, копіювання/вставка","sth geeks_qa execm",["Перевір вимоги до пароля на будь-якому сайті реєстрації","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Числові поля: межі, нуль, відʼємні, дробові, нечислові","dq geeks_qa execm",["Протестуй числове поле кількості товару в реальному магазині","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Дати: формати, високосний рік, минуле/майбутнє, часові зони","sth geeks_qa execm",["Перевір поле дати: 29 лютого, 31.04, дати з минулого","Намалюй схему або mind map цього поняття на папері."]],
+  ["Телефон: формати, код країни, маска вводу","sth httpcats httpstatuses httpbin",["Перевір маску телефону з кодами різних країн","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Форма цілком: обовʼязкові поля, сабміт, повторний сабміт, валідація на фронті й бекенді","dq istqb glos geeks_qa",["Знайди форму і перевір повторний сабміт подвійним кліком","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Завантаження файлів: типи, розмір, імʼя файлу, кирилиця, кілька файлів","ti geeks_qa execm",["Завантаж файл 0 байт, завеликий файл і файл із кирилицею в імені","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Пошук: точний/частковий збіг, регістр, порожній запит, спецсимволи","sth pgexercises hackerrank_sql",["Перевір пошук: порожній запит, пробіли, символи % і лапки","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Фільтри та сортування: комбінації, скидання, збереження стану","sth geeks_qa execm",["Перевір комбінацію фільтр + сортування + скидання на маркетплейсі","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Пагінація: перша/остання сторінка, межі, зміна розміру сторінки","sth geeks_qa execm",["Перейди на останню сторінку пагінації та зміни page size","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Кошик/checkout: додавання, кількість, видалення, промокоди, перерахунок","sauce httpcats httpstatuses httpbin",["Пройди шлях кошика: додай 99 шт, видали все, застосуй промокод","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Логін/реєстрація: невірні дані, блокування, відновлення пароля, сесії","ti geeks_qa execm",["Перевір логін: 5 невірних спроб поспіль — що відбувається?","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Практика: повний тест-дизайн для 3–5 реальних фіч","dq sauce geeks_qa",["Оформи повний тест-дизайн однієї фічі у вигляді mind map","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+ ]},
+]},
+{id:"04", tag:"block", title:"Тестова документація і баг-репорти", sub:"Кейси, чек-листи, плани, дефекти, звіти", topics:[
+ {t:"Тест-кейси", i:[
+  ["Атрибути: ID, назва, передумови (preconditions)","g99 sth geeks_qa",["Напиши кейс із коректними передумовами для перевірки логіну","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Атрибути: кроки, очікуваний результат, постумови","g99 raghav execm tau",["Перевір у своєму кейсі: кроки атомарні, результат однозначний","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Атрибути: пріоритет, статус виконання, посилання на вимогу","sth httpcats httpstatuses httpbin",["Додай до своїх кейсів пріоритет і посилання на вимогу","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Добрі практики: один кейс — одна перевірка, атомарні кроки","mot geeks_qa club_mot",["Відрефактори «поганий» кейс: знайди приклад або вигадай і виправ","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Добрі практики: незалежність кейсів, без зайвої деталізації","mot geeks_qa club_mot",["Перепиши кейс із 15 кроками на 3 незалежні кейси","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Високорівневі vs низькорівневі кейси","istqb geeks_qa club_mot",["Напиши 1 high-level і 1 low-level кейс на ту саму перевірку","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Параметризовані кейси і тестові дані окремо від кроків","sth geeks_qa club_mot",["Винеси дані з кроків кейсу в окрему таблицю параметрів","Намалюй схему або mind map цього поняття на папері."]],
+  ["Підтримка кейсів в актуальному стані","mot geeks_qa club_mot",["Передивись свої кейси місячної давнини — що в них застаріло?","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+ ]},
+ {t:"Чек-листи і набори", i:[
+  ["Структура чек-листа: розділи, пункти-перевірки","sth geeks_qa club_mot",["Склади чек-лист на 30+ пунктів для сторінки товару","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Чек-лист vs тест-кейс: коли що доречно","mot geeks_qa club_mot",["Виріши для 3 фіч: де досить чек-листа, а де потрібні кейси","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Test suite: групування за фічами/типами/пріоритетами","g99 geeks_qa club_mot",["Згрупуй свої кейси у 3 сьюти за пріоритетом","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Смоук-набір, регрес-набір, повний прогін","sth geeks_qa club_mot",["Сформуй смоук-набір із 10 кейсів для умовного проєкту","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Test run: прогін набору, статуси passed/failed/blocked/skipped","tr httpcats httpstatuses httpbin",["Проведи тест-ран і чесно запиши статуси passed/failed/blocked","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+ ]},
+ {t:"Плани і стратегія", i:[
+  ["Test plan: розділи (scope, підхід, ресурси, розклад, ризики, критерії)","g99 sth geeks_qa",["Напиши міні тест-план на 1 сторінку для pet-проєкту","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Test strategy і чим відрізняється від плану","sth geeks_qa club_mot",["Поясни різницю плану і стратегії на рівні відповіді на співбесіді","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Що тестуємо / що не тестуємо (in scope / out of scope)","g99 geeks_qa club_mot",["Визнач in/out of scope для тестування мобільної версії сайту","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Ризики тестування і їх мітигація","istqb geeks_qa club_mot",["Випиши 5 ризиків тестування і мітигацію для кожного","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Traceability matrix (RTM): вимоги ↔ тести ↔ дефекти","g99 geeks_qa club_mot",["Побудуй RTM на 10 вимог свого проєкту","Намалюй схему або mind map цього поняття на папері."]],
+  ["IEEE 829 / ISO 29119 — стандарти документації (оглядово)","sth swagger_petstore publicapis",["Переглянь структуру IEEE 829 і порівняй зі своїм планом","Знайди потрібний ендпоінт у Swagger Petstore і виконай Try it out."]],
+ ]},
+ {t:"Баг-репорт: структура", i:[
+  ["Summary: формула «Що? Де? За яких умов?»","sth mot geeks_qa",["Напиши 5 summary за формулою «Що? Де? Коли?» для вигаданих багів","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Steps to reproduce: нумеровані, відтворювані, з даними","sth geeks_qa club_mot",["Опиши кроки відтворення бага так, щоб їх відтворив друг без підказок","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Actual result vs Expected result","g99 geeks_qa club_mot",["Сформулюй actual/expected для бага з кривою валідацією поля","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Environment: ОС, браузер/девайс, версія білда, стенд","sth jsonplaceholder swagger_petstore",["Заповни environment для бага, знайденого на твоєму компʼютері","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Attachments: скріншоти, відео, логи, HAR-файл","devt mdn_learn geeks_qa",["Запиши відео бага і прикріпи HAR-файл із Network","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Severity і Priority як окремі поля","g99 geeks_qa club_mot",["Постав severity та priority пʼятьом вигаданим багам","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Частота відтворення (always / sometimes), preconditions","mot geeks_qa club_mot",["Знайди «миготливий» баг і коректно опиши частоту відтворення","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+ ]},
+ {t:"Severity і Priority", i:[
+  ["Рівні severity: blocker, critical, major, minor, trivial — з прикладами","g99 sth geeks_qa",["Наведи власний приклад бага на кожен рівень severity","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Рівні priority: high, medium, low — хто визначає","g99 geeks_qa club_mot",["Поясни, чому priority бага може змінитися ближче до релізу","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["High severity + low priority: приклад","g99 geeks_qa club_mot",["Вигадай реалістичний баг high severity / low priority","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Low severity + high priority: приклад (логотип, ціна на головній)","g99 geeks_qa club_mot",["Вигадай баг low severity / high priority і поясни логіку","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Хто і коли може змінювати пріоритет","mot geeks_qa club_mot",["Опиши, як аргументувати незгоду з пониженням пріоритету твого бага","Намалюй схему або mind map цього поняття на папері."]],
+ ]},
+ {t:"Життєвий цикл дефекту", i:[
+  ["Статуси: New → Open/In Progress → Fixed/Resolved → In Testing → Verified → Closed","g99 httpcats httpstatuses httpbin",["Намалюй схему статусів дефекту зі стрілками переходів","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Reopened: коли баг повертається","g99 geeks_qa club_mot",["Опиши свої дії, коли fixed-баг знову відтворюється","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Rejected / Not a bug: причини відхилення","sth geeks_qa club_mot",["Підготуй аргументовану відповідь розробнику на «це не баг, це фіча»","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Duplicate: як шукати дублікати перед заведенням","jira geeks_qa club_mot",["Опиши, як шукатимеш дублікати в трекері перед заведенням бага","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Deferred / Won't fix: відкладені дефекти","sth geeks_qa club_mot",["Поясни, хто вирішує відкласти баг і за якими критеріями","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Cannot reproduce: що робити QA","mot geeks_qa club_mot",["Склади план дій для бага, який не відтворюється на твоєму стенді","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Хто переводить баг між статусами на кожному кроці","g99 httpcats httpstatuses httpbin",["Пройди повний життєвий цикл бага в будь-якому трекері (підійде demo Jira)","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+ ]},
+ {t:"Звітність і метрики", i:[
+  ["Test report / test summary: що містить","g99 geeks_qa club_mot",["Напиши підсумковий звіт тестування на 10 речень","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Метрики: pass rate, кількість знайдених/виправлених дефектів","sth geeks_qa club_mot",["Порахуй pass rate: 120 кейсів, 96 passed","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Метрики: щільність дефектів, тренд по спринтах (оглядово)","sth scrum swtm",["Побудуй графік знайдених і закритих багів за 3 вигадані спринти","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Статус-репорт для команди: коротко і по суті","mot httpcats httpstatuses httpbin",["Напиши статус тестування фічі для daily у 3 реченнях","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+ ]},
+ {t:"Практика", i:[
+  ["Написати 20+ тест-кейсів на реальну фічу","sauce dq geeks_qa",["Виконай і збережи результат у портфоліо","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Скласти чек-лист на 50+ пунктів для сайту","sth geeks_qa club_mot",["Виконай для улюбленого сайту і дай переглянути комусь досвідченому","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Завести 10+ баг-репортів на тренувальному сайті","juice ti geeks_qa",["Виконай: кожен баг — за повною структурою з вкладеннями","Намалюй схему або mind map цього поняття на папері."]],
+  ["Скласти міні тест-план для pet-проєкту","g99 geeks_qa club_mot",["Виконай: 1 сторінка, всі ключові розділи","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+ ]},
+]},
+{id:"05", tag:"block", title:"Веб-технології та DevTools", sub:"HTTP, фронтенд, інструменти браузера", topics:[
+ {t:"Клієнт-серверна архітектура", i:[
+  ["Frontend / backend / база даних: хто за що відповідає","mdn g99 mdn_learn",["Поясни на прикладі логіну, що робить фронт, бек і БД","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Шлях запиту: браузер → DNS → сервер → відповідь → рендер","mdn pgexercises hackerrank_sql",["Опиши словами шлях запиту від адресного рядка до готової сторінки","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Що таке веб-сервер і застосунок-сервер (оглядово)","mdn mdn_learn fcc",["Назви приклад веб-сервера (nginx) і поясни його роль","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Трирівнева архітектура, мікросервіси vs моноліт (оглядово)","yt mdn_learn fcc",["Поясни різницю моноліту і мікросервісів у 3 реченнях","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Де може «жити» баг: фронт, бек, БД, інтеграція — як локалізувати","mot mdn_learn fcc",["Для 3 вигаданих багів визнач імовірний шар: фронт / бек / БД","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+ ]},
+ {t:"HTTP / HTTPS", i:[
+  ["Структура запиту: request line, headers, body","mdnhttp pgexercises hackerrank_sql",["Відкрий Network і розбери будь-який запит: line, headers, body","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Структура відповіді: status line, headers, body","mdnhttp mdn_learn fcc",["Розбери відповідь того ж запиту: статус, заголовки, тіло","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["HTTPS і TLS: навіщо шифрування, що таке сертифікат (оглядово)","mdnhttp httpcats httpstatuses httpbin",["Поясни, що саме засвідчує SSL-сертифікат сайту","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["HTTP/1.1 vs HTTP/2 (оглядово)","mdnhttp httpcats httpstatuses httpbin",["Перевір у DevTools (колонка Protocol), за яким протоколом працює сайт","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Stateless-природа HTTP і навіщо тоді сесії","mdnhttp httpcats httpstatuses httpbin",["Поясни, як stateless-протокол HTTP «памʼятає» користувача","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+ ]},
+ {t:"Методи HTTP", i:[
+  ["GET: отримання даних, параметри в URL","mdnhttp mdn_learn fcc",["Знайди GET-запит із query-параметрами і розшифруй кожен параметр","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["POST: створення, дані в body","mdnhttp mdn_learn fcc",["Злови POST при сабміті форми і подивись його body","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["PUT: повна заміна ресурсу","restapi mdn_learn fcc",["Поясни, чому повторний PUT із тими ж даними безпечний","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["PATCH: часткове оновлення і різниця з PUT","restapi mdn_learn fcc",["Сформулюй PATCH-запит для зміни тільки імені користувача","Намалюй схему або mind map цього поняття на папері."]],
+  ["DELETE: видалення","restapi rr mdn_learn",["Виконай DELETE на тренувальному API і подивись код відповіді","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["HEAD та OPTIONS (оглядово)","mdnhttp mdn_learn fcc",["Виконай OPTIONS-запит і подивись дозволені методи в заголовку Allow","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Ідемпотентність і безпечність методів — які саме і чому","restapi mdn_learn fcc",["Розклади всі методи на ідемпотентні/безпечні в табличку по памʼяті","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+ ]},
+ {t:"Коди статусів", i:[
+  ["Групи: 1xx інформаційні, 2xx успіх, 3xx редиректи, 4xx помилка клієнта, 5xx помилка сервера","mdnhttp mdn_learn fcc",["Згрупуй по памʼяті 12 кодів за групами","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["200 OK, 201 Created, 204 No Content","mdnhttp rr mdn_learn",["Злови в Network або Postman приклади 200, 201 і 204","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["301 vs 302 редиректи, 304 Not Modified","mdnhttp mdn_learn fcc",["Знайди приклад 301-редиректу (наприклад, http → https)","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["400 Bad Request vs 422 Unprocessable Entity","mdnhttp mdn_learn fcc",["Створи запит, що поверне 400, і поясни, чим він «поганий»","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["401 Unauthorized vs 403 Forbidden — класика співбесід","mdnhttp interviewbit qaua club_mot",["Підготуй відповідь на співбесідне питання «401 vs 403» із прикладами","Пройди ще одне mock-інтервʼю або відповіси на 10 питань з InterviewBit."]],
+  ["404 Not Found, 405 Method Not Allowed, 409 Conflict, 429 Too Many Requests","mdnhttp rb mdn_learn",["Отримай 404 і 405 на тренувальному API","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["500 Internal Server Error, 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout","mdnhttp mdn_learn fcc",["Поясни різницю 502 і 504 на прикладі nginx перед бекендом","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+ ]},
+ {t:"Заголовки, cookies, авторизація", i:[
+  ["Content-Type і Accept: JSON, form-data, multipart","mdnhttp jsonplaceholder jsonorg",["Надішли POST з неправильним Content-Type і подивись реакцію сервера","Виконай запит до JSONPlaceholder і розбери структуру відповіді."]],
+  ["Authorization, User-Agent, Referer, Cache-Control","mdnhttp mdn_learn fcc",["Знайди у запитах будь-якого сайту 4 заголовки і поясни кожен","Намалюй схему або mind map цього поняття на папері."]],
+  ["CORS і заголовки Origin/Access-Control-* (оглядово)","mdnhttp mdn_learn fcc",["Знайди або відтвори CORS-помилку в консолі і поясни її","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Cookies: призначення, як передаються","mdnhttp mdn_learn fcc",["Подивись cookies сайту в Application і знайди сесійну","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Атрибути cookie: expires, httpOnly, secure, sameSite, domain, path","mdnhttp httpcats httpstatuses httpbin",["Поясни кожен атрибут будь-якої cookie реального сайту","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Сесійна авторизація (session id) vs токени","jwt portswigger juice",["Намалюй схему: сесійна авторизація vs токени","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["JWT: структура header.payload.signature, де зберігається","jwt mdn_learn fcc",["Розшифруй будь-який JWT на jwt.io і розкажи, що в payload","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["localStorage vs sessionStorage vs cookies — різниця","mdn katacoda fcc",["Заповни табличку відмінностей: обсяг, термін життя, передача на сервер","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+ ]},
+ {t:"HTML / CSS / JS базово", i:[
+  ["HTML: структура документа, основні теги, семантика","mdn w3s mdn_learn",["Розглянь структуру улюбленого сайту через Elements і знайди header/main/footer","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["HTML: форми — input, типи інпутів, select, textarea, button","w3s pgexercises hackerrank_sql",["Зверстай просту форму з 5 різними типами інпутів","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Атрибути: id, class, name, data-* (важливо для локаторів)","mdn raghav execm tau",["Знайди на реальному сайті елементи з data-атрибутами","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["CSS: селектори за тегом, класом, id, атрибутом","csssel xpath mdn_learn",["Напиши 5 CSS-селекторів до елементів реального сайту","Перевір кожен локатор у консолі DevTools через $$() та $x()."]],
+  ["CSS: вкладеність селекторів, псевдокласи (:hover, :nth-child)","csssel xpath mdn_learn",["Вибери елемент через :nth-child у консолі за допомогою $$()","Перевір кожен локатор у консолі DevTools через $$() та $x()."]],
+  ["JavaScript оглядово: що виконується в браузері","mdn mdn_learn fcc",["Виклич alert('test') із консолі браузера","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["DOM: дерево елементів, як JS його змінює","mdn mdn_learn fcc",["Зміни текст елемента сторінки через консоль (document.querySelector)","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["AJAX/fetch: асинхронні запити без перезавантаження сторінки","mdn pgexercises hackerrank_sql",["Знайди в Network fetch/XHR-запит, що йде без перезавантаження сторінки","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+ ]},
+ {t:"DevTools детально", i:[
+  ["Elements: інспекція елемента, перегляд box model","devt mdn_learn fcc",["Виміряй розміри і відступи кнопки через box model","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Elements: правка HTML/CSS на льоту, пошук по DOM (Ctrl+F)","devt mdn_learn fcc",["Зміни колір кнопки сайту на льоту через стилі","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Console: типи повідомлень, читання JS-помилок зі стектрейсом","devt mdn_learn fcc",["Знайди сайт із помилкою в Console і прочитай stack trace до джерела","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Console: фільтрація, збереження логів (preserve log)","devt mdn_learn fcc",["Увімкни preserve log і злови помилку, що зникає при переході сторінки","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Network: список запитів, статуси, час, розмір","devt httpcats httpstatuses httpbin",["Відсортуй запити за тривалістю і знайди найповільніший","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Network: перегляд headers / payload / response конкретного запиту","devt pgexercises hackerrank_sql mdn_learn",["Розбери payload і response запиту логіну на тренувальному сайті","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Network: фільтри (XHR/Fetch), throttling (повільна мережа), офлайн","devt mdn_learn fcc",["Прожени сайт на Slow 3G і опиши, що зламалось чи просіло","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Network: експорт HAR-файлу для баг-репорту","devt mdn_learn fcc",["Експортуй HAR і відкрий його в текстовому редакторі","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Application: cookies, localStorage, sessionStorage — перегляд і правка","devt katacoda fcc mdn_learn",["Зміни значення в localStorage і подивись на поведінку сайту","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Application: очищення кешу і сховищ","devt mdn_learn fcc",["Очисти все сховище сайту через Clear site data і перевір наслідки","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Device toolbar: емуляція мобільних пристроїв і роздільностей","devt mdn_learn fcc",["Перевір сайт у 3 мобільних роздільностях через device toolbar","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Lighthouse: швидкий аудит швидкості/доступності (оглядово)","lh gtmetrix webpagetest devt",["Прожени Lighthouse і прочитай 3 топ-рекомендації","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["Sources і брейкпоінти (оглядово)","devt mdn_learn fcc",["Постав брейкпоінт на клік кнопки через Event Listener Breakpoints","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+ ]},
+ {t:"Мережа і браузери", i:[
+  ["URL: схема, домен, порт, шлях, query-параметри, фрагмент","mdn mdn_learn fcc",["Розклади URL із 4+ query-параметрами на складові частини","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["DNS: як домен перетворюється на IP","mdn mdn_learn fcc",["Виконай ping або nslookup домену і подивись IP","Намалюй схему або mind map цього поняття на папері."]],
+  ["Кешування браузера: чому «працює в інкогніто» і hard refresh","mdnhttp devt mdn_learn",["Порівняй завантаження сайту з кешем і після hard refresh (Ctrl+Shift+R)","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["CDN (оглядово)","mdn mdn_learn fcc",["Знайди в Network ресурси, що віддаються з CDN-доменів","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Кросбраузерність: рушії браузерів, типові відмінності","bstack mdn_learn fcc",["Відкрий сайт у Chrome і Firefox — знайди хоч одну відмінність","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["BrowserStack / LambdaTest для кросбраузерних перевірок","bstack mdn_learn fcc",["Прожени сайт на 2 девайсах через BrowserStack (trial)","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Responsive vs adaptive верстка, breakpoint-и","mdn mdn_learn fcc",["Знайди breakpoint, де ламається верстка сайту, плавно звужуючи вікно","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Перевірка верстки: відступи, переноси, скрол, зум 50–200%","sth mdn_learn fcc",["Перевір сторінку на зумі 200% і знайди проблеми верстки","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+ ]},
+]},
+{id:"06", tag:"block", title:"Тестування API", sub:"REST, Postman, авторизація, документація", topics:[
+ {t:"Теорія API", i:[
+  ["Що таке API і навіщо тестувати на цьому рівні","restapi g99 publicapis httpbin",["Поясни другу, що таке API, на прикладі офіціанта в ресторані","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["REST: принципи, ресурси, ендпоінти","restapi publicapis httpbin istqb",["Випиши 5 принципів REST своїми словами","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Структура REST-ендпоінтів: /users, /users/{id}, вкладені ресурси","restapi publicapis httpbin",["Спроєктуй ендпоінти CRUD для ресурсу «стаття»","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Query-параметри vs path-параметри vs body","restapi publicapis httpbin",["Визнач для 5 параметрів, де їм місце: path, query чи body","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["SOAP і WSDL (оглядово), різниця з REST","g99 publicapis httpbin",["Подивись приклад SOAP-запиту і знайди 3 відмінності від REST","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Версіонування API: /v1/, заголовки (оглядово)","restapi publicapis httpbin",["Знайди публічне API з /v2/ у шляху і поясни, навіщо версії","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Пагінація, фільтрація, сортування в API","rr publicapis httpbin",["Виконай запит із пагінацією page/per_page на reqres.in","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Rate limiting і код 429","mdnhttp httpcats httpstatuses httpbin",["Знайди в документації будь-якого API розділ про rate limits","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Idempotency у платіжних API (оглядово)","restapi publicapis httpbin",["Поясни, навіщо idempotency key при повторній оплаті","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+ ]},
+ {t:"Формати даних", i:[
+  ["JSON: обʼєкти, масиви, типи значень, вкладеність","jsonorg jsonplaceholder publicapis",["Напиши від руки JSON з обʼєктом, масивом, числом, рядком і null","Виконай запит до JSONPlaceholder і розбери структуру відповіді."]],
+  ["JSON: валідність, типові помилки синтаксису","jsonorg jsonplaceholder publicapis",["Знайди і виправ 3 помилки в навмисно зіпсованому JSON","Виконай запит до JSONPlaceholder і розбери структуру відповіді."]],
+  ["XML: структура, теги, атрибути (оглядово)","w3s publicapis httpbin",["Перетвори свій JSON на еквівалентний XML","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["JSON Schema: що це і навіщо (оглядово)","swag jsonplaceholder jsonorg",["Подивись схему будь-якого API у Swagger і знайди required-поля","Виконай запит до JSONPlaceholder і розбери структуру відповіді."]],
+ ]},
+ {t:"Postman", i:[
+  ["Інтерфейс: створення запиту, метод, URL, params","postman rr pgexercises hackerrank_sql",["Створи перший GET-запит до reqres.in","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Headers і body: raw JSON, form-data, x-www-form-urlencoded","postman jsonplaceholder jsonorg",["Надішли POST із raw JSON body і подивись echo-відповідь","Виконай запит до JSONPlaceholder і розбери структуру відповіді."]],
+  ["Колекції та папки: організація запитів","postman jsonplaceholder swagger_petstore pgexercises",["Організуй 10 запитів у колекцію з папками за ресурсами","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Змінні: global, collection, environment, local — області видимості","postman jsonplaceholder swagger_petstore katas",["Створи однойменну змінну на 2 рівнях і перевір, яка переможе","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Environment-и: dev/stage з різними base URL","postman jsonplaceholder swagger_petstore",["Створи environment-и dev і prod із різними baseUrl та перемкнись","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Pre-request scripts: підготовка даних","postman publicapis httpbin",["Згенеруй випадковий email у pre-request скрипті","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Tests: перевірка статус-коду, тіла, заголовків (pm.expect)","postman httpcats httpstatuses httpbin",["Напиши 3 тести: на статус, на поле тіла, на заголовок","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Витягування значення з відповіді у змінну (chaining запитів)","postman rb pgexercises hackerrank_sql",["Збережи token із відповіді логіну і використай у наступному запиті","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Collection Runner: прогін колекції з даними","postman jsonplaceholder swagger_petstore katas",["Прожени колекцію Runner-ом із CSV-файлом даних","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Newman: запуск колекцій з командного рядка (оглядово)","postman jsonplaceholder swagger_petstore katas",["Запусти свою колекцію через newman у терміналі","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Mock servers у Postman (оглядово)","postman jsonplaceholder swagger_petstore",["Створи mock-сервер і отримай від нього свою вигадану відповідь","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+ ]},
+ {t:"Авторизація в API", i:[
+  ["Basic auth: логін/пароль у base64","mdnhttp publicapis httpbin",["Закодуй login:password у base64 і виконай Basic-запит","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Bearer token: звідки береться, як передається","rb publicapis httpbin",["Отримай токен на restful-booker і використай його в захищеному запиті","Намалюй схему або mind map цього поняття на папері."]],
+  ["API key: у заголовку чи query","postman publicapis httpbin",["Знайди публічне API з api key, зареєструйся і зроби запит","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["OAuth 2.0: ролі, флоу authorization code (концептуально)","mdnhttp publicapis httpbin",["Намалюй схему OAuth-флоу «вхід через Google» зі стрілками","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Refresh token: навіщо і як оновлюється access token","jwt publicapis httpbin",["Поясни, чому refresh token живе довше за access token","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Типові перевірки: без токена, прострочений, чужий, зіпсований токен","rb portswigger juice",["Прожени 4 негативні перевірки токена на тренувальному API","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+ ]},
+ {t:"Що перевіряти в API", i:[
+  ["Статус-код відповідає сценарію","rb httpcats httpstatuses httpbin",["Перевір відповідність кодів усім CRUD-сценаріям на restful-booker","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Структура і типи полів відповіді","swag publicapis httpbin",["Звір структуру відповіді з документацією Swagger","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Значення полів: коректність бізнес-логіки","rb publicapis httpbin",["Створи бронювання і перевір розрахункові поля відповіді","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Обовʼязкові поля: відсутність, null, порожній рядок","rb publicapis httpbin",["Надішли запит без обовʼязкового поля, з null і з порожнім рядком","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Невалідні дані: типи, межі, формати","rb publicapis httpbin",["Надішли рядок замість числа і відʼємну ціну — задокументуй реакцію","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Неіснуючі ресурси (404), конфлікти (409)","rb publicapis httpbin",["Запитай неіснуючий id і спробуй конфліктне подвійне створення","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Заголовки відповіді (Content-Type)","mdnhttp publicapis httpbin",["Перевір Content-Type у відповідях сервера","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Час відповіді (адекватність)","postman publicapis httpbin",["Заміряй час відповіді 5 запитів у Postman","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Помилки: формат error message, відсутність stack trace назовні","owasp publicapis httpbin",["Оціни формат помилок API: зрозумілі? чи не світиться stack trace?","Намалюй схему або mind map цього поняття на папері."]],
+  ["Безпека: доступ до чужих ресурсів (IDOR), методи без авторизації","owasp portswigger juice",["Спробуй отримати чужий ресурс, змінивши id (тільки на тренувальному API)","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+ ]},
+ {t:"Документація та інструменти", i:[
+  ["Swagger / OpenAPI: читання специфікації, Try it out","swag swagger_petstore publicapis httpbin",["Виконай запит через Try it out у Swagger Petstore","Знайди потрібний ендпоінт у Swagger Petstore і виконай Try it out."]],
+  ["curl: GET/POST запити, -H, -d, -X, -i","linux httpbin overapi pgexercises",["Повтори свій Postman-запит через curl у терміналі","Повтори запит через curl до httpbin.org із прапорцем -i та поясни відповідь."]],
+  ["Альтернативи Postman: Insomnia, Bruno, HTTPie (оглядово)","yt httpcats httpstatuses httpbin",["Спробуй той самий запит в Insomnia або Bruno","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["GraphQL: query, mutation, одна точка входу, відмінності від REST","gql publicapis httpbin",["Виконай query на публічному GraphQL API (countries.trevorblades.com)","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["WebSocket: що це, чим відрізняється від HTTP (оглядово)","mdn httpcats httpstatuses httpbin",["Подивись WebSocket-фрейми у вкладці Network (WS) на сайті з чатом","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Webhook: напрямок «сервер → клієнт» (оглядово)","postman publicapis httpbin",["Поясни різницю webhook і polling на прикладі сповіщення про оплату","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+ ]},
+ {t:"Практика", i:[
+  ["Повний CRUD на тренувальному API (restful-booker / reqres.in)","rb rr publicapis httpbin",["Виконай і збережи колекцію","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Колекція з environment-ами і 20+ запитами","postman jsonplaceholder swagger_petstore pgexercises",["Виконай: охайні назви, папки, опис у README колекції","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Автотести в Postman на кожен запит","postman jsonplaceholder swagger_petstore pgexercises",["Виконай: мінімум 2 перевірки на запит, зелений прогін Runner-ом","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Зловити запити реального сайту в DevTools і відтворити в Postman","devt jsonplaceholder swagger_petstore pgexercises",["Виконай для 3 запитів будь-якого публічного сайту","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+ ]},
+]},
+{id:"07", tag:"major", title:"Бази даних і SQL", sub:"Перевірка даних на рівні сховища", topics:[
+ {t:"Теорія БД", i:[
+  ["Реляційна модель: таблиці, рядки, колонки","sqlbolt pg pgexercises",["Спроєктуй на папері таблиці users і orders із полями","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Первинний ключ (PK) і його властивості","pg pgexercises hackerrank_sql",["Поясни, чому email — поганий кандидат на первинний ключ","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Зовнішній ключ (FK) і звʼязки таблиць","pg pgexercises hackerrank_sql",["Додай FK у свою схему і поясни, що саме він гарантує","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Типи звʼязків: 1:1, 1:N, M:N (через проміжну таблицю)","pg pgexercises hackerrank_sql",["Наведи приклади звʼязків 1:1, 1:N і M:N із реального життя","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Типи даних: числові, рядкові, дата/час, boolean","w3s pgexercises hackerrank_sql",["Підбери типи даних для всіх полів профілю користувача","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["NULL: особливості порівняння (IS NULL, не = NULL)","mode pgexercises hackerrank_sql",["Поясни, чому умова WHERE x = NULL не працює","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Нормалізація: 1НФ, 2НФ, 3НФ (оглядово, своїми словами)","g99 pgexercises hackerrank_sql",["Перевір свою схему users/orders: чи вона у 3НФ?","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Індекси: навіщо, ціна (оглядово)","pg pgexercises hackerrank_sql",["Поясни, коли індекс шкодить (таблиця з частими INSERT)","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Транзакції та ACID (оглядово)","pg pgexercises hackerrank_sql",["Розкажи ACID на прикладі переказу грошей між рахунками","Намалюй схему або mind map цього поняття на папері."]],
+  ["DDL vs DML vs DCL (оглядово)","w3s pgexercises hackerrank_sql",["Розклади 6 SQL-команд (CREATE, SELECT, GRANT...) на DDL/DML/DCL","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+ ]},
+ {t:"SELECT і фільтрація", i:[
+  ["SELECT: вибірка колонок, аліаси (AS)","sqlbolt pgexercises hackerrank_sql",["Вибери 3 колонки з аліасами з тестової таблиці","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["WHERE: умови порівняння","sqlbolt pgexercises hackerrank_sql",["Напиши WHERE із 3 умовами одночасно","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["AND / OR / NOT і дужки в умовах","sqlbolt pgexercises hackerrank_sql",["Перепиши умову з кількома OR через IN","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["IN, BETWEEN, LIKE (% та _), IS NULL / IS NOT NULL","sqlbolt mode pgexercises",["Знайди всі email на gmail через LIKE","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["ORDER BY: ASC/DESC, кілька колонок","sqlbolt pgexercises hackerrank_sql",["Відсортуй вибірку за 2 колонками в різних напрямках","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["LIMIT / OFFSET (TOP у MS SQL)","mode pgexercises hackerrank_sql",["Виведи рядки з 11 по 20 через LIMIT і OFFSET","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["DISTINCT: унікальні значення","sqlbolt pgexercises hackerrank_sql",["Порахуй унікальні міста користувачів","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+ ]},
+ {t:"Агрегація", i:[
+  ["COUNT, SUM, AVG, MIN, MAX","sqlbolt mode pgexercises",["Порахуй суму і середній чек замовлень за місяць","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["COUNT(*) vs COUNT(колонка) з NULL","mode pgexercises hackerrank_sql",["Порівняй COUNT(*) і COUNT(phone) на таблиці з NULL-ами","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["GROUP BY: групування","sqlbolt pgexercises hackerrank_sql",["Згрупуй замовлення за статусом із підрахунком кількості","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["HAVING і різниця з WHERE","mode pgexercises hackerrank_sql",["Виведи лише групи, де замовлень більше 10 (HAVING)","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Комбінація: GROUP BY + ORDER BY + LIMIT (топ-N)","mode pgexercises hackerrank_sql",["Знайди топ-5 клієнтів за сумою покупок","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+ ]},
+ {t:"JOIN", i:[
+  ["INNER JOIN: тільки збіги","sqlbolt mode pgexercises hackerrank_sql",["Зʼєднай users і orders через INNER JOIN","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["LEFT JOIN: всі зліва + збіги","sqlbolt pgexercises hackerrank_sql",["Виведи всіх користувачів, навіть тих, хто без замовлень","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["RIGHT JOIN","mode pgexercises hackerrank_sql",["Переверни попередній запит у RIGHT JOIN з тим самим результатом","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["FULL OUTER JOIN (оглядово)","mode pgexercises hackerrank_sql",["Поясни, коли потрібен саме FULL OUTER","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["CROSS JOIN (оглядово)","mode pgexercises hackerrank_sql",["Порахуй, скільки рядків дасть CROSS JOIN таблиць 10×10","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["JOIN трьох і більше таблиць","mode pgexercises hackerrank_sql",["Зʼєднай users + orders + products одним запитом","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Пошук «сиріт»: LEFT JOIN + WHERE ... IS NULL","mode pgexercises hackerrank_sql",["Знайди користувачів без жодного замовлення","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Намалювати діаграми Венна для всіх JOIN","w3s pgexercises hackerrank_sql",["Намалюй 5 діаграм Венна по памʼяті і перевір себе","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+ ]},
+ {t:"Зміна даних та інше", i:[
+  ["INSERT INTO: один рядок і кілька","sqlbolt pgexercises hackerrank_sql",["Встав 3 рядки одним INSERT-запитом","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["UPDATE з WHERE (і що буде без WHERE)","sqlbolt pgexercises hackerrank_sql",["Онови статус замовлення за id — але спочатку зроби SELECT з тим самим WHERE","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["DELETE з WHERE vs TRUNCATE (оглядово)","w3s pgexercises hackerrank_sql",["Видали тестовий рядок і поясни ризик DELETE без WHERE","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Підзапити в WHERE та FROM","mode pgexercises hackerrank_sql",["Знайди замовлення, дорожчі за середнє (підзапит)","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["UNION vs UNION ALL","mode pgexercises hackerrank_sql",["Обʼєднай 2 вибірки через UNION і UNION ALL — порівняй кількість рядків","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["CASE WHEN (оглядово)","mode pgexercises hackerrank_sql",["Познач замовлення мітками «дорогі/дешеві» через CASE","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Обережність на спільних стендах: спершу SELECT, потім UPDATE","mot pgexercises hackerrank_sql",["Сформулюй власне правило безпеки роботи з БД на спільному стенді","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+ ]},
+ {t:"NoSQL та інструменти", i:[
+  ["Типи NoSQL: документні, key-value, колонкові, графові (оглядово)","mongo pgexercises hackerrank_sql",["Підбери тип NoSQL під 4 задачі: кеш, чат, аналітика, рекомендації","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["MongoDB: документи, find з фільтром (базово)","mongo katacoda fcc",["Виконай find() із фільтром у Mongo playground (mongoplayground.net)","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Коли обирають NoSQL замість SQL","mongo pgexercises hackerrank_sql",["Наведи 2 аргументи за NoSQL для стрічки новин","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Інструмент: DBeaver / pgAdmin / MySQL Workbench — підключення, виконання запитів, експорт","pg pgexercises hackerrank_sql",["Підключись DBeaver-ом до своєї локальної БД і виконай запит","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Redis як кеш (оглядово)","yt pgexercises hackerrank_sql",["Поясни, що дає Redis перед основною БД","Намалюй схему або mind map цього поняття на папері."]],
+ ]},
+ {t:"Практика", i:[
+  ["50+ задач: SQLBolt, sql-ex.ru, LeetCode Database easy","sqlbolt sqlex lc pgexercises",["Виконай: пройди SQLBolt повністю + 20 задач sql-ex","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Розгорнути локальну БД (SQLite/PostgreSQL) і потренувати CRUD","pg pgexercises hackerrank_sql",["Виконай: створи 2 таблиці зі звʼязком і наповни даними","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Сценарій QA: створив сутність через UI/API → перевірив запис у БД","mot publicapis httpbin",["Виконай на pet-проєкті або локальному застосунку","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+ ]},
+]},
+{id:"08", tag:"major", title:"Мобільне тестування", sub:"iOS, Android, специфічні перевірки", topics:[
+ {t:"Платформи і типи застосунків", i:[
+  ["Native vs hybrid vs web vs PWA: різниця і як визначити","g99 sth edy",["Визнач для 3 застосунків на своєму телефоні: native чи hybrid?","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["iOS: версії, особливості оновлень, парк пристроїв","hig and edy",["Подивись статистику версій iOS і зроби висновок для тестування","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Android: фрагментація версій і виробників, оболонки","and edy execm",["Порівняй один застосунок на «чистому» Android і на Samsung/Xiaomi","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Гайдлайни: Material Design (Android)","matd and edy",["Знайди 3 вимоги Material Design до кнопок","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Гайдлайни: Human Interface Guidelines (iOS)","hig and edy",["Знайди в HIG мінімальний розмір тач-зони","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Матриця пристроїв: як обирати девайси для тестування","bstack edy execm",["Склади матрицю з 5 пристроїв для українського ринку з обґрунтуванням","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+ ]},
+ {t:"Оточення для тестування", i:[
+  ["Емулятор Android (AVD в Android Studio): створення, запуск","and edy execm",["Створи AVD і запусти емулятор Android","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Симулятор iOS (Xcode): можливості й обмеження","hig and edy",["Запусти симулятор iOS (або подивись демо, якщо немає Mac)","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Емулятор/симулятор vs реальний девайс: що не перевіриш віртуально","sth and edy",["Назви 5 перевірок, які неможливі на емуляторі","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Ферми пристроїв: BrowserStack App Live, Firebase Test Lab (оглядово)","bstack fire git_branching githowto",["Прожени застосунок на реальному девайсі через BrowserStack App Live (trial)","Пройди відповідний рівень на Learn Git Branching."]],
+  ["Developer options на Android: usb debugging, show taps, pointer location","and edy execm",["Увімкни show taps і pointer location на Android-пристрої","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+ ]},
+ {t:"Збірки і дистрибуція", i:[
+  ["Android: apk vs aab, встановлення apk вручну","and edy execm",["Встанови apk вручну з файлу (з безпечного джерела)","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["iOS: ipa, профілі (оглядово)","hig djinni li satr",["Поясни, навіщо Apple профілі підпису і чому не можна «просто встановити» ipa","Дай своє CV на рев'ю у QA-спільноті й внеси правки за фідбеком."]],
+  ["TestFlight: отримання білда на iOS","tflight and edy",["Встанови будь-який публічний бета-білд через TestFlight","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Firebase App Distribution / внутрішні треки Google Play","fire git_branching githowto",["Подивись, як виглядає запрошення тестувальника у Firebase App Distribution","Пройди відповідний рівень на Learn Git Branching."]],
+  ["Версія білда і номер збірки в баг-репорті","sth edy execm",["Знайди версію і номер білда в налаштуваннях будь-якого застосунку","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Тестування оновлення: стара версія → нова (міграція даних)","sth edy execm",["Онови застосунок зі старої версії і перевір збереження даних","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+ ]},
+ {t:"Специфічні перевірки", i:[
+  ["Interruption: вхідний дзвінок під час роботи застосунку","sth edy execm",["Подзвони собі під час активного користування застосунком","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Interruption: push-повідомлення, будильник, низький заряд","sth and edy",["Перевір поведінку застосунку при пуші та спрацюванні будильника","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Згортання/розгортання, робота у фоні, kill процесу і відновлення стану","and edy execm",["Згорни застосунок на 10 хвилин, потім убий процес — що зі станом?","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Permissions: запит, відмова, відкликання в налаштуваннях, повторний запит","and hig pgexercises hackerrank_sql",["Відхили permission, потім увімкни в налаштуваннях — як реагує застосунок?","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Орієнтація: поворот екрана на кожному екрані, збереження стану","sth edy execm",["Покрути кожен екран застосунку в landscape — чи зберігається введене?","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Жести: свайпи, pinch-zoom, long tap, back-жест","matd edy execm",["Перевір back-жест на 5 екранах застосунку","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Мережа: Wi-Fi → mobile → офлайн, перемикання, повільний 3G","sth and edy",["Перемкни Wi-Fi → 4G → офлайн посеред завантаження даних","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Режим польоту, режим енергозбереження","sth edy execm",["Увімкни режим польоту під час дії і подивись на обробку помилки","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Геолокація: дозволи, mock-локація (оглядово)","and edy execm",["Підмінь геолокацію на емуляторі через Extended controls","Намалюй схему або mind map цього поняття на папері."]],
+  ["Push-повідомлення: foreground/background/закритий застосунок, тап по пушу","fire and edy",["Перевір тап по пушу в 3 станах застосунку","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Deep links і universal links","and edy execm",["Відкрий deep link застосунку з нотаток або месенджера","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Різні розміри екранів, виріз (notch), системні шрифти збільшені","hig edy execm",["Перевір застосунок зі збільшеним системним шрифтом","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Клавіатура: перекриття полів, кнопка done/next, автокорекція","sth edy execm",["Перевір, чи клавіатура не перекриває поля форми","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Памʼять і батарея: поведінка при нестачі (оглядово)","and edy execm",["Подивись споживання памʼяті застосунку в налаштуваннях системи","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Локалізація: довгі рядки, RTL-мови (оглядово)","sth edy execm",["Перемкни мову телефону і знайди необрізані або неперекладені рядки","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+ ]},
+ {t:"Інструменти і логи", i:[
+  ["ADB: adb devices, install, uninstall","adbd and edy",["Виконай adb devices та adb install для apk","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["ADB: logcat — зняття логів, фільтрація за тегом/рівнем","adbd and edy",["Злови logcat під час крашу або помилки застосунку","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["ADB: screencap, screenrecord","adbd and edy",["Зроби скріншот і запис екрана через adb","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["iOS: логи через Xcode / Console.app (оглядово)","hig and edy devt",["Подивись логи симулятора в Console.app (або відеодемо)","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+  ["Краш-репорти: Firebase Crashlytics (оглядово)","fire git_branching githowto",["Переглянь приклад crash-звіту Crashlytics і знайди в ньому stack trace","Пройди відповідний рівень на Learn Git Branching."]],
+  ["Сніфінг мобільного трафіку через Charles/Proxyman: налаштування проксі та SSL-сертифіката","charles proxyman devt mdn_learn",["Пропусти трафік телефону через Charles із SSL-сертифікатом","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Мобільна автоматизація: Appium / Maestro (тільки оглядово, що існує)","tau raghav execm",["Подивись 10-хвилинне демо Appium або Maestro","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+ ]},
+]},
+{id:"09", tag:"major", title:"Робочі інструменти", sub:"Jira, TMS, сніфери, оточення", topics:[
+ {t:"Jira", i:[
+  ["Типи задач: epic, story, task, bug, sub-task","jira club_mot edy",["Створи безкоштовний Jira-проєкт і задачі всіх типів","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Створення бага: всі поля, шаблони","jira club_mot edy",["Заведи баг у своєму проєкті за повним шаблоном","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Workflow: статуси і переходи, хто рухає задачі","jira httpcats httpstatuses httpbin",["Прожени задачу по workflow і намалюй його схему","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Components, labels, fix version, affected version","jira katacoda fcc",["Додай компоненти та fix version у свій проєкт","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Дошки: Scrum board vs Kanban board","jira scrum swtm",["Створи Scrum-дошку і запусти спринт","Перекажи поняття вголос на прикладі свого pet-проєкту."]],
+  ["Фільтри і базовий JQL: project, status, assignee, ORDER BY","jira pgexercises hackerrank_sql",["Напиши JQL: мої відкриті баги цього проєкту","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["JQL складніше: AND/OR, updated >= -7d, text ~","jira club_mot edy",["Напиши JQL: баги, оновлені за 7 днів, із текстом «логін»","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Дашборди і гаджети (оглядово)","jira club_mot edy",["Збери дашборд із 2 гаджетів","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Звʼязки задач: blocks, relates to, duplicates","jira club_mot edy",["Звʼяжи 2 задачі як blocks і поясни різницю з relates to","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+ ]},
+ {t:"Test Management Systems", i:[
+  ["Навіщо TMS: кейси, рани, звіти в одному місці","tr club_mot edy",["Поясни, чим TMS краща за кейси в Google Sheets (і коли Sheets ок)","Намалюй схему або mind map цього поняття на папері."]],
+  ["TestRail: структура (suites, sections, cases, runs, plans)","tr club_mot edy",["Заведи trial TestRail і створи структуру suite → section → cases","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Альтернативи: Zephyr, Xray, Qase, TestLink (оглядово)","yt club_mot edy",["Подивись 10-хвилинний огляд Qase або Zephyr","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Інтеграція TMS з Jira","tr club_mot edy",["Знайди в документації, як кейс TestRail лінкується з багом у Jira","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Звіти про прогін у TMS","tr club_mot edy",["Сформуй звіт прогону в TMS і поясни його цифри","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+ ]},
+ {t:"Сніфери трафіку", i:[
+  ["Charles / Fiddler / Proxyman: принцип роботи proxy","charles proxyman istqb glos",["Установи Charles або Proxyman і подивись свій трафік","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Налаштування SSL-сертифіката для HTTPS-трафіку","charles httpcats httpstatuses httpbin",["Постав SSL-сертифікат і розшифруй HTTPS-трафік","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Перегляд запитів/відповідей застосунку","proxyman pgexercises hackerrank_sql",["Відфільтруй запити конкретного сайту або застосунку","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Throttling: емуляція повільної мережі","charles club_mot edy",["Увімкни throttle 3G і відчуй різницю на сайті","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Breakpoints: зміна запиту/відповіді на льоту","charles pgexercises hackerrank_sql",["Постав breakpoint і зміни відповідь сервера перед доставкою","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Rewrite і Map Local: підміна відповідей (мокання)","charles proxyman club_mot",["Підмінь JSON-відповідь через Map Local на свій файл","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["mitmproxy (оглядово)","yt club_mot edy",["Подивись 5-хвилинне демо mitmproxy","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+ ]},
+ {t:"Документація і дизайн", i:[
+  ["Confluence: створення сторінок, шаблони, структура простору","conf club_mot edy",["Створи в Confluence або Notion сторінку з шаблоном тест-плану","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Figma: навігація, інспект елементів, виміри відступів і кольорів","figma club_mot edy",["Виміряй у Figma відступи і колір кнопки будь-якого макета з Community","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Звірка реалізації з макетом: чек-лист pixel-perfect перевірок","figma club_mot edy",["Звір реальну сторінку з макетом за чек-листом із 10 пунктів","Намалюй схему або mind map цього поняття на папері."]],
+  ["Mind maps (XMind/Miro) для тест-аналізу фічі","mot club_mot edy",["Розклади одну фічу на mind map перед тестуванням","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+ ]},
+ {t:"Допоміжні інструменти", i:[
+  ["Скріншоти з анотаціями: вбудовані засоби ОС, monosnap тощо","yt club_mot edy",["Зроби скріншот бага з анотаціями-стрілками","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Запис екрана: відео-докази для багів","yt club_mot edy",["Запиши відео бага тривалістю до 30 секунд","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Генератори тестових даних: email-и (mailinator/temp mail), тестові картки","yt club_mot edy",["Заведи тестову пошту і отримай на неї лист підтвердження","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Регулярні вирази базово: пошук у логах і валідація (оглядово)","mdn regex101 regexlearn istqb",["Напиши регулярку для пошуку email у тексті (потренуй на regex101)","Збери і протестуй свій патерн на regex101, перевір на 5 прикладах."]],
+  ["Текстовий редактор для нотаток: VS Code / Notepad++","yt club_mot edy",["Налаштуй VS Code для нотаток у markdown","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+ ]},
+ {t:"Оточення і CI/CD поняття", i:[
+  ["Стенди: dev, QA/test, staging, production — призначення","mot club_mot edy",["Поясни різницю stage і prod та чому не тестуємо на prod","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Що таке білд, артефакт, деплой","gha club_mot edy",["Простеж шлях фічі: коміт → білд → деплой → тестування","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Пайплайн CI/CD: етапи, де запускаються тести","gha katacoda fcc",["Намалюй схему пайплайна з місцями запуску тестів","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Feature flags / toggles: вплив на тестування (оглядово)","mot club_mot edy",["Поясни, як feature flag дозволяє реліз без ризику","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Хто і як котить релізи: release notes, rollback (оглядово)","mot club_mot edy",["Знайди release notes улюбленого застосунку і прочитай останні 3","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+ ]},
+]},
+{id:"10", tag:"minor", title:"Нефункціональне тестування", sub:"Performance, a11y, security, локалізація", topics:[
+ {t:"Performance: теорія", i:[
+  ["Load testing: очікуване навантаження","g99 jm gtmetrix webpagetest",["Сформулюй ціль load-тесту для сайту з піком 1000 користувачів","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["Stress testing: пошук межі і поведінка за нею","g99 webpagetest portswigger",["Поясни різницю load і stress одним реченням","Намалюй схему або mind map цього поняття на папері."]],
+  ["Spike testing: різкі сплески","g99 webpagetest portswigger",["Наведи життєвий приклад spike: старт продажу квитків на концерт","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Endurance (soak): тривале навантаження, витоки памʼяті","sth gtmetrix webpagetest",["Поясни, який тип дефекту ловить soak-тест на 12 годин","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["Volume testing: великі обсяги даних","sth webpagetest portswigger",["Опиши volume-тест для таблиці з 10 млн рядків","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Scalability testing (оглядово)","sth webpagetest portswigger",["Поясни горизонтальне vs вертикальне масштабування","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Метрики: response time, latency, throughput, RPS","jm gtmetrix webpagetest",["Дай визначення RPS, latency і throughput своїми словами","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["Перцентилі: чому p95/p99 важливіші за середнє","k6 gtmetrix webpagetest",["Поясни на прикладі, чому p99 чесніший за середнє значення","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["Вузькі місця: CPU, памʼять, БД, мережа (оглядово)","jm webpagetest portswigger",["Назви 4 типові вузькі місця системи під навантаженням","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+ ]},
+ {t:"Performance: інструменти", i:[
+  ["JMeter: thread group, sampler, listener — простий сценарій","jm gtmetrix webpagetest",["Створи в JMeter план: 10 користувачів на тестовий сайт","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["k6 (оглядово): сценарій на JS","k6 gtmetrix webpagetest",["Прочитай quick start k6 і запусти приклад скрипта","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["Аналіз результатів: графіки, помилки під навантаженням","jm gtmetrix webpagetest",["Знайди у своїх результатах помилки і деградацію часу відповіді","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+  ["Клієнтський перфоманс: Lighthouse, Core Web Vitals (оглядово)","lh gtmetrix webpagetest katacoda",["Заміряй Core Web Vitals улюбленого сайту через Lighthouse","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+ ]},
+ {t:"Usability та UX", i:[
+  ["10 евристик Нільсена (оглядово)","nng webpagetest portswigger",["Оціни улюблений сайт за 3 евристиками Нільсена","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Консистентність інтерфейсу, зрозумілість повідомлень про помилки","nng webpagetest portswigger",["Знайди 3 неконсистентності в будь-якому інтерфейсі","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Empty states, лоадери, стани кнопок","nng webpagetest portswigger",["Знайди порожній стан без пояснення, що робити далі","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Юзабіліті-знахідки: як оформлювати (пропозиція, не баг)","mot webpagetest portswigger",["Оформи юзабіліті-знахідку як пропозицію покращення","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+ ]},
+ {t:"Accessibility (a11y)", i:[
+  ["WCAG: принципи POUR (perceivable, operable, understandable, robust)","wcag wave axe contrast",["Перекажи 4 принципи POUR із прикладом на кожен","Прожени сторінку через WAVE або axe і випиши топ-3 порушення."]],
+  ["Рівні відповідності A / AA / AAA (оглядово)","wcag webpagetest portswigger",["Поясни різницю рівнів A і AA на одному критерії","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Контраст тексту, розміри клікабельних зон","wcag wave axe contrast",["Перевір контраст тексту сайту інструментом (contrast checker)","Прожени сторінку через WAVE або axe і випиши топ-3 порушення."]],
+  ["Клавіатурна навігація: tab-порядок, фокус видимий","wcag wave axe contrast",["Пройди сайт тільки клавіатурою: Tab, Enter, Esc","Прожени сторінку через WAVE або axe і випиши топ-3 порушення."]],
+  ["Alt-тексти, aria-атрибути (оглядово)","mdn wave axe contrast",["Знайди картинки без alt через DevTools","Прожени сторінку через WAVE або axe і випиши топ-3 порушення."]],
+  ["Скрінрідери: VoiceOver / NVDA — спробувати базово","wcag wave axe contrast",["Увімкни скрінрідер і прослухай головну сторінку сайту","Прожени сторінку через WAVE або axe і випиши топ-3 порушення."]],
+  ["Інструменти: axe DevTools, Lighthouse accessibility","lh gtmetrix webpagetest wave",["Прожени axe DevTools і розбери топ-3 проблеми","Прожени сторінку через GTmetrix або WebPageTest і порівняй метрики."]],
+ ]},
+ {t:"Security базово", i:[
+  ["OWASP Top 10: переглянути список і зрозуміти категорії","owasp portswigger juice",["Прочитай OWASP Top 10 і перекажи 3 категорії своїми словами","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["XSS: reflected/stored, як перевірити поле простим payload-ом","owasp juice portswigger",["Введи <scr"+"ipt>alert(1)</scr"+"ipt> у поле тренувального сайту","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["SQL-інʼєкції: ідея, класичний приклад ' OR 1=1","owasp juice pgexercises hackerrank_sql",["Спробуй класичний payload у формі логіну Juice Shop","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["CSRF: концепція (оглядово)","owasp portswigger juice",["Намалюй схему CSRF-атаки зі стрілками","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["IDOR: доступ до чужих ресурсів зміною id","owasp juice portswigger",["Зміни id у URL профілю на тренувальному сайті","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["Брутфорс і захист: rate limiting, captcha, блокування","owasp portswigger juice",["Перевір, чи блокується логін після серії невірних спроб","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["Безпека сесій: logout, інвалідація токенів, паралельні сесії","owasp portswigger juice istqb",["Перевір, чи «вмирає» сесія після logout (кнопка назад, старий токен)","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["Чутливі дані: паролі в логах, дані в URL, автозаповнення","owasp webpagetest portswigger",["Пошукай чутливі дані в URL або консолі тренувального застосунку","Намалюй схему або mind map цього поняття на папері."]],
+  ["Практика: OWASP Juice Shop — пройти кілька завдань","juice portswigger webpagetest",["Розгорни Juice Shop і виконай 3 челенджі з табла","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+ ]},
+ {t:"Локалізація і сумісність", i:[
+  ["i18n vs l10n: різниця","g99 webpagetest portswigger",["Поясни i18n vs l10n на прикладі формату дат","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Перевірки локалізації: переклади, обрізання довгих рядків, конкатенації","sth webpagetest portswigger",["Перемкни мову сайту і знайди необрізані чи неперекладені рядки","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Формати: дати, числа, валюти, перша буква тижня","sth webpagetest portswigger",["Перевір формат дати і валюти у 2 різних локалях","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["RTL-мови і спецсимволи (оглядово)","sth webpagetest portswigger",["Подивись будь-який сайт арабською (RTL) — що зламалось?","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Compatibility: матриця ОС/браузерів/розширень екрана","bstack webpagetest portswigger",["Склади матрицю сумісності: 3 браузери × 3 роздільності","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Installation/upgrade/uninstall testing","sth webpagetest portswigger",["Установи, онови і видали програму — перевір залишки після видалення","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Recovery testing: відновлення після збою (оглядово)","sth webpagetest portswigger",["Вимкни інтернет посеред операції — як система відновлюється?","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+ ]},
+]},
+{id:"11", tag:"major", title:"Командний рядок, Git, Linux, Docker", sub:"Технічна база для роботи з оточеннями", topics:[
+ {t:"Термінал і файлова система", i:[
+  ["Навігація: pwd, cd, ls (з ключами -la)","linux katacoda fcc",["Перейди по 5 директоріях і виведи приховані файли через ls -la","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Файли: cat, cp, mv, rm, mkdir, touch","linux githowto katacoda",["Створи папку, файл у ній, скопіюй і перейменуй його","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Перегляд: less, head, tail","linux katacoda fcc",["Відкрий великий лог у less і подивись перші/останні 20 рядків","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Пошук: find за іменем, grep за вмістом","linux katacoda fcc",["Знайди всі .log файли через find і пошукай у них ERROR через grep","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Пайпи та редиректи: |, >, >> (базово)","linux katacoda fcc",["Виведи ls, відфільтруй через grep і збережи результат у файл","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Права доступу: rwx, chmod (оглядово)","linux katacoda fcc",["Подивись права файлу через ls -l і поясни rwx-блоки","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Змінні оточення: echo $PATH, export (оглядово)","linux katas fcc py",["Виведи $PATH і поясни, навіщо ця змінна","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Процеси: ps, kill (оглядово)","linux katacoda fcc",["Знайди процес через ps і поясни, що робить kill","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Мережа: ping, curl, traceroute (оглядово)","linux httpbin overapi katacoda",["Пропінгуй домен і витягни заголовки сайту через curl -I","Повтори запит через curl до httpbin.org із прапорцем -i та поясни відповідь."]],
+ ]},
+ {t:"Робота з логами", i:[
+  ["tail -f: живий перегляд логу","linux katacoda fcc",["Запусти tail -f на логу і подивись, як зʼявляються нові рядки","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["grep: пошук помилки, -i, -n, контекст -A/-B","linux katacoda fcc",["Знайди ERROR із 3 рядками контексту через grep -A3 -B3","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Рівні логування: DEBUG, INFO, WARN, ERROR","mot githowto katacoda",["Розклади приклади подій по рівнях логування","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Знайти в лозі stack trace і додати в баг-репорт","mot githowto katacoda",["Витягни stack trace із логу і встав у баг-репорт коректно","Намалюй схему або mind map цього поняття на папері."]],
+  ["SSH: підключення до сервера, scp для копіювання (оглядово)","linux katacoda fcc",["Поясни послідовно, що робить команда ssh user@host","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+ ]},
+ {t:"Git", i:[
+  ["Навіщо контроль версій; репозиторій, коміт, історія","git git_branching githowto",["Поясни колезі, навіщо Git, на прикладі спільного документа","Пройди відповідний рівень на Learn Git Branching."]],
+  ["git clone, git status, git log","git gh git_branching githowto",["Склонуй будь-який публічний репозиторій і подивись його історію","Пройди відповідний рівень на Learn Git Branching."]],
+  ["git add, git commit (осмислені повідомлення)","git git_branching githowto",["Зроби 3 коміти з охайними повідомленнями у тестовому репозиторії","Пройди відповідний рівень на Learn Git Branching."]],
+  ["git push, git pull, git fetch","git gh git_branching githowto",["Запуш зміни у свій GitHub-репозиторій","Пройди відповідний рівень на Learn Git Branching."]],
+  ["Гілки: branch, checkout/switch, naming","git git_branching githowto",["Створи гілку feature/test, перемкнись на неї і назад","Пройди відповідний рівень на Learn Git Branching."]],
+  ["git merge і базове розвʼязання конфліктів","git git_branching githowto",["Створи і розвʼяжи навмисний конфлікт злиття у тестовому репозиторії","Пройди відповідний рівень на Learn Git Branching."]],
+  ["git stash (оглядово), .gitignore","git git_branching githowto",["Сховай зміни через stash і поверни їх; додай .gitignore","Пройди відповідний рівень на Learn Git Branching."]],
+  ["merge vs rebase (оглядово, концептуально)","git git_branching githowto",["Намалюй різницю історії після merge і після rebase","Пройди відповідний рівень на Learn Git Branching."]],
+  ["Pull Request / Merge Request: створення, рев'ю","gh git_branching githowto",["Створи PR у своєму репозиторії і опиши зміни","Пройди відповідний рівень на Learn Git Branching."]],
+  ["GitHub/GitLab: завести акаунт, викласти свої роботи","gh git_branching githowto",["Виклади свої кейси/колекцію Postman у публічний репозиторій","Пройди відповідний рівень на Learn Git Branching."]],
+ ]},
+ {t:"Docker оглядово", i:[
+  ["Що таке контейнер і чим відрізняється від віртуалки","docker dockercurriculum katacoda",["Поясни різницю контейнера і ВМ у 3 реченнях","Повтори дію в пісочниці killercoda без локального встановлення."]],
+  ["Image vs container","docker dockercurriculum katacoda",["Поясни аналогію: image — клас, container — обʼєкт","Повтори дію в пісочниці killercoda без локального встановлення."]],
+  ["docker run, ps, stop, logs, exec","docker dockercurriculum katacoda",["Запусти контейнер nginx і відкрий його у браузері","Повтори дію в пісочниці killercoda без локального встановлення."]],
+  ["docker-compose: підняти тестове оточення однією командою (оглядово)","docker dockercurriculum katacoda",["Знайди готовий docker-compose.yml і підніми сервіс","Повтори дію в пісочниці killercoda без локального встановлення."]],
+  ["Навіщо QA: локальні стенди, БД у контейнері","docker dockercurriculum katacoda",["Підніми PostgreSQL у Docker і підключись до неї","Повтори дію в пісочниці killercoda без локального встановлення."]],
+ ]},
+]},
+{id:"12", tag:"minor", title:"Вступ до автоматизації", sub:"Мова програмування, локатори, фреймворки, CI", topics:[
+ {t:"Стратегія", i:[
+  ["Коли автоматизація доцільна, а коли дорожча за користь","tau mot raghav execm",["Виріши для 5 кейсів: автоматизувати чи лишити ручними, з обґрунтуванням","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Що автоматизують першим: смоук, регрес, API","tau publicapis httpbin raghav",["Склади порядок автоматизації для нового проєкту","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Піраміда автоматизації на практиці","tau raghav execm istqb",["Розподіли 100 уявних тестів по рівнях піраміди","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Флакі-тести: причини нестабільності","pw raghav execm",["Назви 4 причини флакі-тестів і спосіб боротьби з кожною","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+ ]},
+ {t:"Мова програмування (Python / Java / JS)", i:[
+  ["Налаштування середовища: інтерпретатор/JDK, IDE (PyCharm/VS Code/IntelliJ)","py devt mdn_learn",["Установи Python і запусти перший скрипт у VS Code","Повтори дію в DevTools на ще одному сайті й порівняй результат."]],
+  ["Змінні і типи: числа, рядки, boolean","py katas fcc",["Напиши скрипт зі змінними всіх базових типів і виведи їх","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Рядки: методи, форматування","py raghav execm",["Поексперементуй з 5 методами рядків (upper, split, strip, replace, format)","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Колекції: списки/масиви, словники/мапи, множини","py jsonplaceholder swagger_petstore katas",["Створи список, словник і множину; додай і видали елементи","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["Умови: if/elif/else","py katacoda fcc",["Напиши функцію визначення FizzBuzz для чисел 1–20","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Цикли: for, while, break/continue","py katas fcc",["Виведи числа 1–100, кратні 3, через цикл із continue","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Функції: параметри, повернення значення","py katas fcc",["Напиши функцію, що приймає список і повертає його суму","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Винятки: try/except, читання трейсбеку","py katas fcc",["Спровокуй ZeroDivisionError і оброби його через try/except","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["ООП базово: клас, обʼєкт, метод (для PageObject далі)","py katas fcc",["Створи клас User з полями і методом, створи обʼєкт","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Робота з файлами: читання/запис (оглядово)","py raghav execm",["Запиши список у файл і прочитай його назад","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Модулі та пакети, віртуальне оточення (venv/pip)","py raghav execm",["Створи venv і встанови в нього пакет через pip","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Базові алгоритмічні задачі (FizzBuzz, реверс рядка тощо)","cw lc katas fcc",["Виріши 5 задач рівня easy на Codewars","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+  ["Лінтери і формат коду (оглядово)","py httpcats httpstatuses httpbin",["Прожени flake8 або black по своєму скрипту","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+ ]},
+ {t:"Локатори", i:[
+  ["CSS-селектори для автоматизації: id, class, атрибути","csssel raghav execm tau",["Напиши CSS-локатори до 5 елементів тренувального сайту","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["XPath: абсолютний vs відносний","xpath csssel raghav",["Перепиши 3 CSS-локатори в XPath","Перевір кожен локатор у консолі DevTools через $$() та $x()."]],
+  ["XPath: осі, contains(), text(), and/or","xpath csssel raghav",["Знайди елемент за текстом через XPath contains()","Перевір кожен локатор у консолі DevTools через $$() та $x()."]],
+  ["Пошук за текстом, за частковим збігом","xpath raghav execm",["Знайди кнопку за видимим текстом на сторінці","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Стратегія стійких локаторів: data-testid, пріоритет id","pw raghav execm tau",["Запропонуй розробнику data-testid і поясни вигоду для автотестів","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Перевірка локаторів у DevTools ($x для XPath, $$ для CSS)","devt katacoda fcc raghav",["Перевір свої локатори в консолі через $x() і $$()","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Антипатерни: крихкі XPath від кореня, привʼязка до тексту, що змінюється","pw csssel xpath",["Знайди крихкий локатор і зроби його стійким","Перевір кожен локатор у консолі DevTools через $$() та $x()."]],
+ ]},
+ {t:"UI-автоматизація", i:[
+  ["Selenium / Playwright / Cypress: огляд і відмінності","sel pw cy raghav",["Склади порівняльну табличку Selenium / Playwright / Cypress","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Встановлення і перший запущений тест","pw raghav execm",["Установи Playwright і запусти згенерований приклад-тест","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Базові дії: click, type, select, hover","pw cy pgexercises hackerrank_sql",["Автоматизуй заповнення форми на saucedemo","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Очікування: чому sleep — погано, explicit/auto-waiting","pw sel raghav execm",["Замени sleep на нормальне очікування у своєму тесті","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Перевірки/асерти: видимість, текст, кількість елементів","pw raghav execm",["Додай 3 асерти у свій тест (текст, видимість, кількість)","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Робота з формами, дропдаунами, чекбоксами, алертами","sel dq raghav",["Автоматизуй усі типи елементів на demoqa","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["iframe і робота з кількома вкладками/вікнами","sel dq raghav",["Автоматизуй дію всередині iframe на demoqa","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Скріншоти і трейси при падінні тесту","pw raghav execm",["Увімкни трейс Playwright і відкрий його після падіння тесту","Намалюй схему або mind map цього поняття на папері."]],
+  ["Запуск у headless-режимі","pw raghav execm tau",["Прожени тест у headless і в звичайному режимі — порівняй","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Практика: автоматизувати логін і базовий сценарій на saucedemo","sauce pw raghav execm",["Автоматизуй логін + покупку товару на saucedemo","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+ ]},
+ {t:"Фреймворк тестів", i:[
+  ["Test runner: pytest / JUnit / TestNG / Jest — призначення","pytest raghav execm tau",["Установи pytest і запусти перший тест-файл","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Структура тесту: arrange-act-assert","pytest raghav execm tau",["Перепиши свій тест у структуру arrange-act-assert","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Fixtures / setup-teardown: підготовка і прибирання","pytest raghav execm tau",["Винеси відкриття браузера у fixture pytest","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Page Object Model: ідея і навіщо","pw tau raghav execm",["Винеси сторінку логіну в окремий Page Object","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Параметризація тестів","pytest raghav execm",["Параметризуй тест логіну трьома наборами даних","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Конфіги, змінні оточення для тестів","pytest katas fcc py",["Винеси baseUrl у конфіг або змінну оточення","Виріши 2 задачі на Exercism або Codewars і збережи рішення."]],
+ ]},
+ {t:"API-автоматизація", i:[
+  ["Бібліотеки: requests (Python) / RestAssured (Java) (оглядово)","reqlib publicapis httpbin katas",["Виконай GET-запит через бібліотеку requests","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Написати простий API-тест із асертом статусу й тіла","reqlib pytest httpcats httpstatuses",["Напиши автотест GET-запиту з перевіркою статусу і поля","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Серіалізація/десеріалізація JSON у коді","reqlib httpcats httpstatuses httpbin",["Розпарси JSON-відповідь і дістань вкладене значення в коді","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Ланцюжок запитів у коді (логін → дія з токеном)","reqlib rb httpcats httpstatuses",["Автоматизуй: логін → збереження токена → захищений запит","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["API + UI у межах одного сценарію (оглядово)","pw publicapis httpbin",["Опиши сценарій: підготовка даних через API, перевірка через UI","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+ ]},
+ {t:"Звіти і CI", i:[
+  ["Звіти: Allure / вбудовані HTML-репорти","allure raghav execm",["Згенеруй Allure-звіт за результатами своїх тестів","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["Запуск автотестів у CI (GitHub Actions базово)","gha git_branching githowto raghav",["Налаштуй GitHub Actions, що ганяє твої тести на push","Пройди відповідний рівень на Learn Git Branching."]],
+  ["Артефакти прогону: логи, скріншоти, відео в CI","gha pw raghav",["Зроби так, щоб CI зберігав скріншоти впалих тестів як артефакти","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Паралельний запуск (оглядово)","pw raghav execm",["Запусти тести у 2 потоки і порівняй час","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+  ["Тригери: push, PR, за розкладом (cron)","gha and edy",["Додай запуск тестів за розкладом cron у GitHub Actions","Відтвори перевірку на емуляторі/реальному пристрої та зніми лог."]],
+ ]},
+]},
+{id:"13", tag:"block", title:"Практика, портфоліо, працевлаштування", sub:"Англійська, pet-проєкти, резюме, співбесіди", topics:[
+ {t:"Англійська для QA", i:[
+  ["Технічна лексика: терміни тестування англійською","glos eng istqb geeks_qa",["Випиши 30 термінів тестування англійською з перекладом","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Читання документації без перекладача","mdn swagger_petstore publicapis",["Прочитай розділ англомовної документації без перекладача","Знайди потрібний ендпоінт у Swagger Petstore і виконай Try it out."]],
+  ["Письмо: баг-репорти і кейси англійською","mot qaua interviewbit",["Напиши 5 баг-репортів англійською за правильною структурою","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["Підняти рівень мінімум до B1–B2 (розмовна практика)","eng qaua interviewbit",["Розкажи англійською 2 хвилини про свій проєкт без підготовки","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["Лексика для співбесіди: розповідь про себе, досвід, проєкти","li interviewbit qaua club_mot",["Підготуй і запиши self-intro англійською на 2 хвилини","Пройди ще одне mock-інтервʼю або відповіси на 10 питань з InterviewBit."]],
+  ["Слухання: технічні відео й подкасти англійською","yt qaua interviewbit",["Подивись технічне відео англійською без субтитрів","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+ ]},
+ {t:"Тренувальні майданчики", i:[
+  ["the-internet (herokuapp): різні UI-елементи й челенджі","ti qaua interviewbit",["Пройди 10 сторінок the-internet і запиши знахідки","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["saucedemo: інтернет-магазин для тренувань","sauce qaua interviewbit",["Знайди всі «вшиті» проблеми saucedemo (різні логіни)","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["demoqa: форми, елементи, віджети","dq qaua interviewbit",["Заповни і засабміть Practice Form на demoqa","Намалюй схему або mind map цього поняття на папері."]],
+  ["OWASP Juice Shop: безпека","juice portswigger qaua",["Виконай 5 челенджів Juice Shop","Пройди відповідну лабораторію на PortSwigger Web Security Academy."]],
+  ["restful-booker / reqres.in: API-тренування","rb rr publicapis httpbin",["Прожени повний CRUD на обох API","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["Власні улюблені застосунки як обʼєкт дослідницького тестування","mot qaua interviewbit",["Проведи багхант улюбленого реального застосунку і заведи 5 багів","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+ ]},
+ {t:"Pet-проєкт / портфоліо", i:[
+  ["Обрати застосунок і написати на нього повний комплект тест-документації","sauce dq swagger_petstore publicapis",["Збери комплект: тест-план, чек-листи, кейси для одного застосунку","Знайди потрібний ендпоінт у Swagger Petstore і виконай Try it out."]],
+  ["Тест-план + чек-листи + 30–50 кейсів","g99 tr qaua",["Виконай і виклади в репозиторій або TMS","Склади чек-лист із 3–5 пунктів, що випливають із цієї теми."]],
+  ["20+ баг-репортів з вкладеннями","juice ti qaua",["Заведи в трекері з відео й HAR-файлами","Знайди, де саме цей пункт стане у пригоді в роботі QA, і запиши приклад."]],
+  ["Postman-колекція з автотестами","postman rb jsonplaceholder swagger_petstore",["Виклади колекцію з тестами і README","Повтори те саме на Swagger Petstore і збережи у свою колекцію."]],
+  ["SQL-запити для перевірки даних застосунку","sqlex pgexercises hackerrank_sql",["Додай 10 типових SQL-перевірок до портфоліо","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["Невеликий UI/API автотест-проєкт на GitHub","pw gh publicapis httpbin",["Виклади репозиторій з автотестами і README з інструкцією запуску","Обери будь-яке API з каталогу Public APIs і протестуй один ендпоінт."]],
+  ["README з описом проєкту і скріншотами","gh qaua interviewbit",["Напиши README, який зрозуміє рекрутер за 2 хвилини","Порівняй цей пункт із суміжним поняттям: чим схожі та чим різняться."]],
+ ]},
+ {t:"Резюме і профілі", i:[
+  ["Структура CV: контакти, summary, скіли, досвід/проєкти, освіта, англійська","djinni dou li satr",["Склади CV на 1 сторінку за цією структурою","Дай своє CV на рев'ю у QA-спільноті й внеси правки за фідбеком."]],
+  ["Hard skills блок: інструменти й технології зі стека","djinni katacoda fcc devt",["Випиши свій стек чесно: що знаєш добре, що оглядово","Повтори команду в онлайн-терміналі killercoda і збережи вивід."]],
+  ["Опис pet-проєктів замість досвіду","dou qaua interviewbit",["Опиши pet-проєкт у CV як реальний робочий досвід (чесно)","Поясни цей пункт уголос своїми словами та наведи власний приклад."]],
+  ["LinkedIn: заповнений профіль, ключові слова","li djinni satr",["Заповни LinkedIn-профіль повністю з ключовими словами QA","Дай своє CV на рев'ю у QA-спільноті й внеси правки за фідбеком."]],
+  ["Djinni: профіль під українській ринок","djinni li satr",["Створи профіль на Djinni і заповни очікування","Дай своє CV на рев'ю у QA-спільноті й внеси правки за фідбеком."]],
+  ["Cover letter / відгук: коротко і по суті","djinni li satr",["Напиши шаблон відгуку на вакансію на 4 речення","Дай своє CV на рев'ю у QA-спільноті й внеси правки за фідбеком."]],
+  ["Типові помилки в резюме джуна","dou djinni li satr",["Перевір своє CV за списком типових помилок джунів","Дай своє CV на рев'ю у QA-спільноті й внеси правки за фідбеком."]],
+ ]},
+ {t:"Підготовка до співбесід", i:[
+  ["Теорія: 7 принципів, піраміда, severity/priority, smoke/sanity, STLC","istqb g99 glos geeks_qa",["Дай усні відповіді на 10 класичних теоретичних питань","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+  ["Практичні завдання: «протестуй цей обʼєкт» (склянка, ліфт, форма)","mot qaua interviewbit",["Усно «протестуй» ручку і ліфт за 5 хвилин кожен","Сформулюй питання, яке поставив(-ла) б на співбесіді за цією темою, і відповідь на нього."]],
+  ["SQL наживо: написати запит із JOIN і GROUP BY","sqlex lc pgexercises hackerrank_sql",["Напиши на час запит із JOIN і агрегацією без підказок","Виріши 2 відповідні задачі на PGExercises або HackerRank SQL."]],
+  ["API: пояснити коди статусів, методи, як тестувати ендпоінт","restapi httpcats httpstatuses httpbin",["Поясни вголос, як ти тестував би новий ендпоінт","Відтвори цей кейс на httpbin.org і звір результат із документацією."]],
+  ["Behavioral: розповідь про себе, чому QA, складні ситуації","li interviewbit qaua club_mot",["Підготуй історії за форматом STAR на 3 поведінкові питання","Пройди ще одне mock-інтервʼю або відповіси на 10 питань з InterviewBit."]],
+  ["Тестове завдання: типові формати і як здавати","mot interviewbit qaua club_mot",["Виконай і оформи навчальне тестове завдання охайно","Пройди ще одне mock-інтервʼю або відповіси на 10 питань з InterviewBit."]],
+  ["Питання роботодавцю: що питати наприкінці","dou qaua interviewbit",["Підготуй 5 розумних питань для інтервʼюера","Знайди реальний приклад цього у застосунку, яким користуєшся щодня."]],
+  ["Mock-інтервʼю: пройти пробну співбесіду","mot interviewbit qaua club_mot",["Проведи mock-інтервʼю з колегою або у спільноті","Пройди ще одне mock-інтервʼю або відповіси на 10 питань з InterviewBit."]],
+ ]},
+ {t:"Розвиток і ринок", i:[
+  ["Спільноти: QA-чати, форуми, мітапи","dou mot qaua",["Підпишись на 2 QA-спільноти і постав перше питання","Запиши короткий конспект (3–5 рядків) і додай його у свої нотатки."]],
+  ["Канали і блоги для постійного навчання","mot sth qaua",["Збери добірку з 5 джерел, які читатимеш регулярно","Перевір себе: закрий матеріал і перекажи суть із памʼяті."]],
+  ["Розуміння грейдів: trainee → junior → middle, очікування","dou raghav execm tau",["Випиши, що відрізняє junior від middle QA","Подивись профільне відео-демо і відтвори приклад у себе локально."]],
+  ["Знайомство з ринком вакансій: вимоги junior QA","djinni dou qaua",["Проаналізуй 10 вакансій junior QA і випиши спільні вимоги","Намалюй схему або mind map цього поняття на папері."]],
+  ["План розвитку після працевлаштування (manual → auto / напрями)","tau qaua interviewbit",["Накидай свій план розвитку на перший рік у професії","Поясни тему «на пальцях» людині без IT-бекграунду."]],
+  ["Сертифікація ISTQB Foundation (за бажанням, оглядово)","istqb glos geeks_qa",["Подивись структуру і вартість іспиту ISTQB FL","Знайди відповідний термін у глосарії ISTQB і випиши визначення."]],
+ ]},
+]},
+];
+
+/* ── рендер ── */
+const app = document.getElementById('app');
+const frag = document.createDocumentFragment();
+
+DATA.forEach(sec => {
+  const det = document.createElement('details');
+  det.className = 'sec';
+  det.dataset.sec = sec.id;
+
+  const sum = document.createElement('summary');
+  sum.className = 'sec-sum';
+  const award = ACH[sec.id] ? ACH[sec.id][0] : '';
+  sum.innerHTML =
+    '<span class="sec-id">' + sec.id + '</span>' +
+    '<span class="sec-title">' + sec.title +
+      '<span class="tag ' + sec.tag + '">' + sec.tag + '</span>' +
+      '<small>' + sec.sub + '</small></span>' +
+    '<span class="sec-award" title="бейдж за 100% розділу">' + award + '</span>' +
+    '<span class="sec-count" data-sec="' + sec.id + '">0/0</span>' +
+    '<svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  det.appendChild(sum);
+
+  const meter = document.createElement('div');
+  meter.className = 'sec-meter';
+  meter.innerHTML = '<i data-sec="' + sec.id + '"></i>';
+  det.appendChild(meter);
+
+  const body = document.createElement('div');
+  body.className = 'sec-body';
+
+  sec.topics.forEach((tp, ti) => {
+    const topic = document.createElement('div');
+    topic.className = 'topic';
+    const th = document.createElement('div');
+    th.className = 'topic-h';
+    th.innerHTML = '<h3>' + tp.t + '</h3><span class="tcount">0/' + tp.i.length + '</span>';
+    topic.appendChild(th);
+
+    const ul = document.createElement('ul');
+    ul.className = 'items';
+
+    tp.i.forEach((item, ii) => {
+      const text = item[0], srcKeys = item[1] || '';
+      const tasks = Array.isArray(item[2]) ? item[2] : (item[2] ? [item[2]] : []);
+      const li = document.createElement('li');
+      li.className = 'item';
+
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.dataset.key = sec.id + '|' + ti + '|' + ii;
+      const box = document.createElement('span');
+      box.className = 'box';
+      const txt = document.createElement('span');
+      txt.className = 'txt';
+      txt.textContent = text;
+      label.appendChild(input);
+      label.appendChild(box);
+      label.appendChild(txt);
+      li.appendChild(label);
+
+      const srcArr = srcKeys.trim() ? srcKeys.trim().split(/\s+/).filter(k => SRC[k]) : [];
+      const more = document.createElement('details');
+      more.className = 'more';
+      const msum = document.createElement('summary');
+      msum.textContent = 'практика (' + tasks.length + ') · джерела (' + srcArr.length + ')';
+      more.appendChild(msum);
+      const mbody = document.createElement('div');
+      mbody.className = 'more-body';
+
+      if (tasks.length === 1){
+        const ptask = document.createElement('p');
+        ptask.className = 'task';
+        ptask.textContent = tasks[0];
+        mbody.appendChild(ptask);
+      } else if (tasks.length > 1){
+        const lab = document.createElement('p');
+        lab.className = 'task';
+        lab.textContent = 'Практичні завдання для самоперевірки:';
+        mbody.appendChild(lab);
+        const ol = document.createElement('ol');
+        ol.className = 'tasklist';
+        tasks.forEach(t => {
+          const liT = document.createElement('li');
+          liT.textContent = t;
+          ol.appendChild(liT);
+        });
+        mbody.appendChild(ol);
+      }
+
+      if (srcArr.length){
+        const psrc = document.createElement('p');
+        psrc.className = 'src';
+        srcArr.forEach(k => {
+          const s = SRC[k];
+          const a = document.createElement('a');
+          a.href = s[1]; a.target = '_blank'; a.rel = 'noopener';
+          a.textContent = s[0];
+          psrc.appendChild(a);
+        });
+        mbody.appendChild(psrc);
+      }
+      more.appendChild(mbody);
+      li.appendChild(more);
+
+      ul.appendChild(li);
+    });
+
+    topic.appendChild(ul);
+    body.appendChild(topic);
+  });
+
+  det.appendChild(body);
+  frag.appendChild(det);
+});
+
+app.appendChild(frag);
+
+/* ── кімната нагород ── */
+const badgesEl = document.getElementById('badges');
+DATA.forEach(sec => {
+  const a = ACH[sec.id];
+  if (!a) return;
+  const b = document.createElement('div');
+  b.className = 'badge';
+  b.dataset.sec = sec.id;
+  b.innerHTML = '<span class="bi">' + a[0] + '</span><span><span class="bn">' + a[1] +
+    '</span><br><span class="bd">розділ ' + sec.id + ' · ' + a[2] + '</span></span>';
+  badgesEl.appendChild(b);
+});
+const msEl = document.getElementById('milestones');
+MILESTONES.forEach(m => {
+  const el = document.createElement('span');
+  el.className = 'ms';
+  el.dataset.pct = m[0];
+  el.textContent = m[1];
+  msEl.appendChild(el);
+});
+
+/* ── localStorage ── */
+const STORE_KEY = 'qa-roadmap-progress-v2';
+const OLD_KEY = 'qa-roadmap-progress-v1';
+let storageOk = true;
+function loadSaved(){
+  try {
+    let raw = localStorage.getItem(STORE_KEY);
+    if (raw === null){
+      const old = localStorage.getItem(OLD_KEY);
+      if (old !== null) raw = old; // міграція: ключі сумісні
+    }
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch(e){ storageOk = false; return new Set(); }
+}
+function saveProgress(){
+  if (!storageOk) return;
+  try {
+    const keys = [];
+    document.querySelectorAll('.item input:checked').forEach(i => keys.push(i.dataset.key));
+    localStorage.setItem(STORE_KEY, JSON.stringify(keys));
+  } catch(e){ storageOk = false; }
+}
+const saved = loadSaved();
+if (saved.size){
+  document.querySelectorAll('.item input').forEach(i => {
+    if (saved.has(i.dataset.key)) i.checked = true;
+  });
+}
+
+/* ── підрахунок + нагороди ── */
+let unlockedPrev = null; // Set; null = перший рендер (без toast)
+const totalItems = document.querySelectorAll('.item input').length;
+document.getElementById('totalN').textContent = totalItems;
+document.getElementById('footTotal').textContent =
+  DATA.reduce((a, s) => a + s.topics.length, 0) + ' блоків · ' + totalItems + ' пунктів';
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function update(){
+  const allInputs = [...document.querySelectorAll('.item input')];
+  const done = allInputs.filter(i => i.checked).length;
+  const pct = totalItems ? Math.round(done / totalItems * 100) : 0;
+
+  document.getElementById('totalBar').style.width = pct + '%';
+  document.getElementById('doneN').textContent = done;
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('rank').textContent = 'RANK: ' + rankOf(pct);
+
+  const nowUnlocked = new Set();
+
+  DATA.forEach(sec => {
+    const ins = [...document.querySelectorAll('.item input[data-key^="' + sec.id + '|"]')];
+    const d = ins.filter(i => i.checked).length;
+    const m = ins.length;
+    const cnt = document.querySelector('.sec-count[data-sec="' + sec.id + '"]');
+    cnt.textContent = d + '/' + m;
+    cnt.classList.toggle('done', d === m && m > 0);
+    document.querySelector('.sec-meter i[data-sec="' + sec.id + '"]').style.width =
+      (m ? d / m * 100 : 0) + '%';
+    const det = document.querySelector('details.sec[data-sec="' + sec.id + '"]');
+    const full = d === m && m > 0;
+    det.classList.toggle('completed', full);
+    const badge = document.querySelector('.badge[data-sec="' + sec.id + '"]');
+    if (badge) badge.classList.toggle('unlocked', full);
+    if (full && ACH[sec.id]) nowUnlocked.add('b' + sec.id);
+  });
+
+  // топіки
+  DATA.forEach(sec => {
+    const det = document.querySelector('details.sec[data-sec="' + sec.id + '"]');
+    det.querySelectorAll('.topic').forEach(tp => {
+      const ins = [...tp.querySelectorAll('.item input')];
+      const d = ins.filter(i => i.checked).length;
+      const c = tp.querySelector('.tcount');
+      c.textContent = d + '/' + ins.length;
+      c.classList.toggle('done', d === ins.length && ins.length > 0);
+    });
+  });
+
+  // майлстоуни
+  let achCount = 0;
+  document.querySelectorAll('.badge.unlocked').forEach(() => achCount++);
+  document.getElementById('achCnt').textContent = achCount + '/13 бейджів';
+  MILESTONES.forEach(m => {
+    const el = document.querySelector('.ms[data-pct="' + m[0] + '"]');
+    const on = pct >= m[0];
+    el.classList.toggle('unlocked', on);
+    if (on) nowUnlocked.add('m' + m[0]);
+  });
+
+  // hideDone
+  if (document.getElementById('toggleDone').classList.contains('active')){
+    allInputs.forEach(i => i.closest('.item').classList.toggle('hidden', i.checked));
+  }
+
+  // toast про нові нагороди
+  if (unlockedPrev !== null){
+    for (const id of nowUnlocked){
+      if (!unlockedPrev.has(id)){
+        if (id[0] === 'b'){
+          const a = ACH[id.slice(1)];
+          showToast('Новий бейдж: ' + a[0] + ' <b>' + a[1] + '</b>');
+        } else {
+          const m = MILESTONES.find(x => 'm' + x[0] === id);
+          if (m) showToast('Досягнення: <b>' + m[1] + '</b>');
+        }
+        break;
+      }
+    }
+  }
+  unlockedPrev = nowUnlocked;
+}
+update();
+
+/* ── обробники ── */
+document.addEventListener('change', e => {
+  if (e.target.matches('.item input')) { update(); saveProgress(); }
+});
+
+document.getElementById('toggleDone').addEventListener('click', e => {
+  const b = e.currentTarget;
+  b.classList.toggle('active');
+  b.textContent = b.classList.contains('active') ? 'Показати виконане' : 'Сховати виконане';
+  if (!b.classList.contains('active'))
+    document.querySelectorAll('.item.hidden').forEach(li => li.classList.remove('hidden'));
+  update();
+});
+document.getElementById('openAll').addEventListener('click',
+  () => document.querySelectorAll('details.sec').forEach(d => d.open = true));
+document.getElementById('closeAll').addEventListener('click',
+  () => document.querySelectorAll('details.sec').forEach(d => d.open = false));
+document.getElementById('reset').addEventListener('click', () => {
+  if (!confirm('Скинути весь прогрес? Це видалить і збережені позначки, і відкриті нагороди.')) return;
+  document.querySelectorAll('.item input').forEach(i => i.checked = false);
+  try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(OLD_KEY); } catch(e){}
+  update();
+});
+</script>
+</body>
+</html>
